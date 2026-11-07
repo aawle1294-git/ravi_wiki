@@ -169,7 +169,7 @@ export default function OfficialDocDetailPage() {
           </aside>
 
           {/* 중앙 본문 영역 */}
-          <article className="lg:col-span-3">
+          <article className="lg:col-span-3 min-w-0 w-full">
             {isEditing ? (
               /* 개발자 전용 편집 폼 */
               <form onSubmit={handleSave} className="bg-slate-900/80 border border-purple-500/50 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-5">
@@ -236,7 +236,7 @@ export default function OfficialDocDetailPage() {
               </form>
             ) : (
               /* 문서 읽기 모드 */
-              <div className="bg-slate-900/40 border border-slate-800/80 rounded-3xl p-6 sm:p-10 shadow-xl">
+              <div className="bg-slate-900/40 border border-slate-800/80 rounded-3xl p-6 sm:p-10 shadow-xl w-full min-w-0">
                 
                 {/* 메타 정보 */}
                 <div className="flex items-center space-x-4 text-xs text-slate-400 pb-5 mb-6 border-b border-slate-800/80">

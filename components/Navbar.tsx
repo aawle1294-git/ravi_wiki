@@ -20,6 +20,8 @@ import {
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth'
 
+import ServerStatusBadge from './ServerStatusBadge'
+
 export default function Navbar() {
   const pathname = usePathname()
   const { user, loginAsDeveloper, loginAsPlayer, logout, isDeveloper } = useAuth()
@@ -111,9 +113,12 @@ export default function Navbar() {
             </nav>
           </div>
 
-          {/* 우측 영역: IP 복사 + 로그인 / 권한 상태 */}
+          {/* 우측 영역: 서버 상태 + IP 복사 + 로그인 / 권한 상태 */}
           <div className="flex items-center space-x-3">
             
+            {/* 실시간 서버 온라인 뱃지 */}
+            <ServerStatusBadge />
+
             {/* 서버 IP 복사 */}
             <button
               onClick={copyServerIp}

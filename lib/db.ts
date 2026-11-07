@@ -1,10 +1,17 @@
+// lib/db.ts에 자유 위키 상세 조회 및 댓글 관련 함수 추가
 import { supabase, isSupabaseConfigured } from './supabase'
 import { INITIAL_OFFICIAL_DOCS, INITIAL_FREE_DOCS, OfficialDoc, FreeDoc } from './wikiData'
 
+export interface FreeDocComment {
+  id: string
+  docId: string
+  author: string
+  content: string
+  createdAt: string
+}
+
 /**
  * 📘 공식 위키 전체 목록 가져오기
- * 1. Supabase 연동 시: Supabase 클라우드 DB에서 실시간 조회
- * 2. 미연동 시: 로컬 스토리지 또는 기본 시드 데이터 반환
  */
 export async function getOfficialDocs(): Promise<OfficialDoc[]> {
   if (isSupabaseConfigured && supabase) {
@@ -85,7 +92,6 @@ export async function getOfficialDocBySlug(slug: string): Promise<OfficialDoc | 
     } catch (e) {}
   }
 
-  // 로컬 fallback
   if (typeof window !== 'undefined') {
     const saved = localStorage.getItem(`ravi_official_${slug}`)
     if (saved) {
@@ -101,7 +107,6 @@ export async function getOfficialDocBySlug(slug: string): Promise<OfficialDoc | 
  * 📘 공식 위키 문서 저장 (개발자 전용)
  */
 export async function saveOfficialDoc(doc: OfficialDoc): Promise<boolean> {
-  // 로컬 저장
   if (typeof window !== 'undefined') {
     localStorage.setItem(`ravi_official_${doc.slug}`, JSON.stringify(doc))
     const customList = JSON.parse(localStorage.getItem('ravi_official_custom_slugs') || '[]')
@@ -111,7 +116,6 @@ export async function saveOfficialDoc(doc: OfficialDoc): Promise<boolean> {
     }
   }
 
-  // Supabase 클라우드 DB 저장
   if (isSupabaseConfigured && supabase) {
     try {
       const { error } = await supabase
@@ -164,7 +168,6 @@ export async function getFreeDocs(): Promise<FreeDoc[]> {
     } catch (e) {}
   }
 
-  // 로컬 fallback
   if (typeof window !== 'undefined') {
     const saved = localStorage.getItem('ravi_free_wiki_docs')
     if (saved) {
@@ -173,6 +176,14 @@ export async function getFreeDocs(): Promise<FreeDoc[]> {
   }
 
   return INITIAL_FREE_DOCS
+}
+
+/**
+ * ✍️ 특정 자유 위키 문서 조회 (ID 기반)
+ */
+export async function getFreeDocById(id: string): Promise<FreeDoc | null> {
+  const all = await getFreeDocs()
+  return all.find(d => d.id === id) || null
 }
 
 /**
@@ -185,14 +196,12 @@ export async function saveFreeDoc(doc: Omit<FreeDoc, 'id'>): Promise<FreeDoc> {
     id: newId
   }
 
-  // 로컬 저장
   if (typeof window !== 'undefined') {
     const current = await getFreeDocs()
     const updated = [completeDoc, ...current]
     localStorage.setItem('ravi_free_wiki_docs', JSON.stringify(updated))
   }
 
-  // Supabase 저장
   if (isSupabaseConfigured && supabase) {
     try {
       const { data, error } = await supabase
@@ -228,7 +237,6 @@ export async function saveFreeDoc(doc: Omit<FreeDoc, 'id'>): Promise<FreeDoc> {
  * ✍️ 자유 위키 추천(좋아요)
  */
 export async function likeFreeDoc(id: string): Promise<void> {
-  // 로컬 업데이트
   if (typeof window !== 'undefined') {
     const saved = localStorage.getItem('ravi_free_wiki_docs')
     if (saved) {
@@ -242,7 +250,6 @@ export async function likeFreeDoc(id: string): Promise<void> {
     }
   }
 
-  // Supabase 업데이트
   if (isSupabaseConfigured && supabase) {
     try {
       await supabase.rpc('increment_likes', { doc_id: id })
@@ -250,3 +257,44 @@ export async function likeFreeDoc(id: string): Promise<void> {
   }
 }
 
+/**
+ * 💬 자유 위키 댓글 가져오기
+ */
+export async function getFreeDocComments(docId: string): Promise<FreeDocComment[]> {
+  if (typeof window !== 'undefined') {
+    const saved = localStorage.getItem(`ravi_free_comments_${docId}`)
+    if (saved) {
+      try { return JSON.parse(saved) } catch (e) {}
+    }
+  }
+  return [
+    {
+      id: 'c1',
+      docId,
+      author: '라비용사',
+      content: '좋은 정보 감사합니다! 파티 구할 때 도움 많이 되었습니다.',
+      createdAt: '2026-11-07 17:30'
+    }
+  ]
+}
+
+/**
+ * 💬 자유 위키 댓글 추가
+ */
+export async function addFreeDocComment(docId: string, author: string, content: string): Promise<FreeDocComment> {
+  const newComment: FreeDocComment = {
+    id: Date.now().toString(),
+    docId,
+    author,
+    content,
+    createdAt: '방금 전'
+  }
+
+  if (typeof window !== 'undefined') {
+    const current = await getFreeDocComments(docId)
+    const updated = [newComment, ...current]
+    localStorage.setItem(`ravi_free_comments_${docId}`, JSON.stringify(updated))
+  }
+
+  return newComment
+}
