@@ -81,30 +81,30 @@ export default function FreeWikiPage() {
   })
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
+    <div className="min-h-screen flex flex-col text-zinc-100">
       <Navbar />
 
       <main className="max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-1">
         
         {/* 상단 배너 */}
-        <div className="bg-gradient-to-r from-indigo-950/40 via-purple-950/20 to-slate-900 border border-indigo-500/30 rounded-3xl p-6 sm:p-10 mb-8 shadow-2xl">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+        <div className="glass-panel rounded-3xl p-6 sm:p-9 mb-8 shadow-xl relative overflow-hidden">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 relative z-10">
             <div>
-              <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 text-xs font-semibold mb-3">
+              <div className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-xs font-semibold mb-3">
                 <Sparkles className="w-3.5 h-3.5" />
                 <span>누구나 자유롭게 참여하는 오픈 공간</span>
               </div>
-              <h1 className="text-2xl sm:text-4xl font-extrabold text-white">
+              <h1 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
                 ✍️ 자유 위키 & 게시판
               </h1>
-              <p className="mt-2 text-xs sm:text-sm text-slate-300 max-w-xl">
+              <p className="mt-2 text-xs sm:text-sm text-zinc-400 max-w-xl leading-relaxed">
                 플레이어들이 직접 작성하는 사냥 꿀팁, 강화 성공 비법, 파티 구인, 질문과 답변을 자유롭게 나누어보세요.
               </p>
             </div>
 
             <button
               onClick={() => setShowModal(true)}
-              className="flex items-center justify-center space-x-2 px-5 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold shadow-lg shadow-indigo-600/30 transition self-start sm:self-center"
+              className="flex items-center justify-center space-x-2 px-5 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-[0_0_15px_rgba(99,102,241,0.35)] transition-all self-start sm:self-center"
             >
               <Plus className="w-4 h-4" />
               <span>자유 위키 / 글 작성</span>
@@ -114,15 +114,15 @@ export default function FreeWikiPage() {
 
         {/* 필터 및 검색창 */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-          <div className="flex items-center space-x-2 overflow-x-auto pb-2 sm:pb-0">
+          <div className="flex items-center space-x-1.5 overflow-x-auto pb-2 sm:pb-0">
             {['전체', '공략/팁', '자유위키', '질문/답변', '파티모집'].map(cat => (
               <button
                 key={cat}
                 onClick={() => setSelectedCat(cat)}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all ${
                   selectedCat === cat
-                    ? 'bg-indigo-600 text-white shadow'
-                    : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200'
+                    ? 'bg-indigo-600 text-white shadow-sm'
+                    : 'bg-white/[0.03] border border-white/[0.07] text-zinc-400 hover:text-zinc-200'
                 }`}
               >
                 {cat}
@@ -131,48 +131,48 @@ export default function FreeWikiPage() {
           </div>
 
           <div className="relative w-full sm:w-64">
-            <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               placeholder="제목, 내용, 작성자 검색..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3.5 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full pl-9 pr-3.5 py-2 rounded-xl bg-white/[0.03] border border-white/[0.08] text-xs text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/60"
             />
           </div>
         </div>
 
         {/* 게시글/문서 리스트 */}
         {loading ? (
-          <div className="text-center py-16 text-slate-500 text-xs">
+          <div className="text-center py-20 text-zinc-500 text-xs">
             자유 위키 글을 불러오는 중입니다...
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3.5">
             {filtered.map(doc => (
               <div
                 key={doc.id}
-                className="p-5 rounded-2xl bg-slate-900/50 border border-slate-800/80 hover:border-slate-700 transition shadow-lg"
+                className="glass-panel p-5 rounded-2xl transition shadow-md hover:border-white/[0.15]"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="space-y-2 flex-1">
-                    <div className="flex items-center space-x-2.5">
-                      <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-indigo-950/80 border border-indigo-500/40 text-indigo-300">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-indigo-950/40 border border-indigo-500/30 text-indigo-300">
                         {doc.category}
                       </span>
-                      <span className="text-xs font-semibold text-slate-300">
+                      <span className="text-xs font-semibold text-zinc-300">
                         🎮 {doc.author}
                       </span>
-                      <span className="text-[11px] text-slate-500">• {doc.updatedAt}</span>
+                      <span className="text-[11px] text-zinc-500">• {doc.updatedAt}</span>
                     </div>
 
                     <Link href={`/free-wiki/${doc.id}`} className="group/title block">
-                      <h3 className="text-base sm:text-lg font-bold text-white group-hover/title:text-indigo-300 transition">
+                      <h3 className="text-base sm:text-lg font-bold text-white group-hover/title:text-indigo-300 transition-colors">
                         {doc.title}
                       </h3>
                     </Link>
 
-                    <p className="text-sm text-slate-300 leading-relaxed whitespace-pre-wrap">
+                    <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed whitespace-pre-wrap line-clamp-2">
                       {doc.content}
                     </p>
                   </div>
@@ -180,7 +180,7 @@ export default function FreeWikiPage() {
                   {/* 추천 버튼 */}
                   <button
                     onClick={() => handleLike(doc.id)}
-                    className="flex flex-col items-center justify-center p-3 rounded-xl bg-slate-800/60 border border-slate-700 hover:border-indigo-500 hover:bg-indigo-950/40 text-slate-400 hover:text-indigo-300 transition"
+                    className="flex flex-col items-center justify-center p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.07] hover:border-indigo-500/50 hover:bg-indigo-950/30 text-zinc-400 hover:text-indigo-300 transition shrink-0"
                     title="추천하기"
                   >
                     <ThumbsUp className="w-4 h-4 mb-1" />
@@ -191,7 +191,7 @@ export default function FreeWikiPage() {
             ))}
 
             {filtered.length === 0 && (
-              <div className="text-center py-16 bg-slate-900/30 rounded-2xl border border-dashed border-slate-800 text-slate-500 text-xs">
+              <div className="text-center py-20 glass-panel rounded-3xl border border-dashed border-white/[0.08] text-zinc-500 text-xs">
                 작성된 문서가 없습니다. 첫 번째 자유 위키/글을 작성해보세요!
               </div>
             )}
@@ -201,24 +201,24 @@ export default function FreeWikiPage() {
 
       {/* 자유 글쓰기 모달 */}
       {showModal && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl text-slate-100">
-            <h3 className="text-lg font-bold text-white mb-2 flex items-center space-x-2">
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="glass-panel rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl text-zinc-100 border border-white/[0.1]">
+            <h3 className="text-lg font-bold text-white mb-1.5 flex items-center space-x-2">
               <Sparkles className="w-5 h-5 text-indigo-400" />
               <span>자유 위키 / 게시글 작성</span>
             </h3>
-            <p className="text-xs text-slate-400 mb-5">
+            <p className="text-xs text-zinc-400 mb-5">
               공략 팁, 질문, 파티 모집 정보를 자유롭게 공유하세요.
             </p>
 
             <form onSubmit={handleCreate} className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">카테고리</label>
+                  <label className="block text-xs font-semibold text-zinc-300 mb-1">카테고리</label>
                   <select
                     value={newCategory}
                     onChange={(e) => setNewCategory(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-3 py-2 rounded-xl bg-white/[0.04] border border-white/[0.1] text-xs text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/60"
                   >
                     <option value="공략/팁">공략/팁</option>
                     <option value="자유위키">자유위키</option>
@@ -227,39 +227,39 @@ export default function FreeWikiPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">작성자 닉네임</label>
+                  <label className="block text-xs font-semibold text-zinc-300 mb-1">작성자 닉네임</label>
                   <input
                     type="text"
                     placeholder="인게임 닉네임"
                     value={newAuthor}
                     onChange={(e) => setNewAuthor(e.target.value)}
                     required
-                    className="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-3 py-2 rounded-xl bg-white/[0.04] border border-white/[0.1] text-xs text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/60"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">제목</label>
+                <label className="block text-xs font-semibold text-zinc-300 mb-1">제목</label>
                 <input
                   type="text"
                   placeholder="제목을 입력하세요..."
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
                   required
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.1] text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/60"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">본문 내용</label>
+                <label className="block text-xs font-semibold text-zinc-300 mb-1">본문 내용</label>
                 <textarea
                   placeholder="공략이나 질문, 정보를 자세히 적어주세요..."
                   value={newContent}
                   onChange={(e) => setNewContent(e.target.value)}
                   rows={5}
                   required
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.1] text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/60 resize-none"
                 />
               </div>
 
@@ -267,14 +267,14 @@ export default function FreeWikiPage() {
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-800 text-slate-400 hover:bg-slate-700 text-xs font-semibold"
+                  className="px-4 py-2 rounded-xl bg-white/[0.04] text-zinc-400 hover:bg-white/[0.08] text-xs font-semibold"
                 >
                   취소
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="flex items-center space-x-1.5 px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-xs font-bold shadow-lg shadow-indigo-600/30"
+                  className="flex items-center space-x-1.5 px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-xs font-bold shadow-md shadow-indigo-600/30"
                 >
                   <Send className="w-3.5 h-3.5" />
                   <span>{isSubmitting ? '저장 중...' : '등록하기'}</span>

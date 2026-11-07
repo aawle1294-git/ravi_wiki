@@ -15,7 +15,6 @@ import {
   User, 
   Send, 
   ArrowLeft,
-  Sparkles,
   Share2,
   Check
 } from 'lucide-react'
@@ -83,19 +82,19 @@ export default function FreeDocDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
+      <div className="min-h-screen flex flex-col text-zinc-100">
         <Navbar />
-        <div className="text-center py-24 text-slate-400 text-sm">게시글을 불러오는 중입니다...</div>
+        <div className="text-center py-24 text-zinc-500 text-xs">게시글을 불러오는 중입니다...</div>
       </div>
     )
   }
 
   if (!doc) {
     return (
-      <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
+      <div className="min-h-screen flex flex-col text-zinc-100">
         <Navbar />
         <div className="max-w-md mx-auto text-center py-24">
-          <p className="text-slate-400 text-sm mb-4">존재하지 않거나 삭제된 게시글입니다.</p>
+          <p className="text-zinc-400 text-sm mb-4">존재하지 않거나 삭제된 게시글입니다.</p>
           <Link
             href="/free-wiki"
             className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-indigo-600 text-white text-xs font-bold"
@@ -109,24 +108,24 @@ export default function FreeDocDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
+    <div className="min-h-screen flex flex-col text-zinc-100">
       <Navbar />
 
       <main className="max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
         
         {/* 상단 빵부스러기 및 공유 버튼 */}
-        <div className="flex items-center justify-between pb-6 border-b border-slate-800/80 mb-6">
-          <div className="flex items-center space-x-2 text-xs sm:text-sm text-slate-400">
+        <div className="flex items-center justify-between pb-5 border-b border-white/[0.07] mb-6">
+          <div className="flex items-center space-x-2 text-xs text-zinc-400">
             <Link href="/" className="hover:text-indigo-300 transition">홈</Link>
-            <ChevronRight className="w-3.5 h-3.5 text-slate-600" />
+            <ChevronRight className="w-3.5 h-3.5 text-zinc-600" />
             <Link href="/free-wiki" className="hover:text-indigo-300 transition">자유 위키</Link>
-            <ChevronRight className="w-3.5 h-3.5 text-slate-600" />
-            <span className="text-indigo-400 font-semibold truncate max-w-[200px]">{doc.title}</span>
+            <ChevronRight className="w-3.5 h-3.5 text-zinc-600" />
+            <span className="text-indigo-300 font-medium truncate max-w-[200px]">{doc.title}</span>
           </div>
 
           <button
             onClick={handleShare}
-            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 text-xs font-medium transition"
+            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-white/[0.03] border border-white/[0.08] hover:bg-white/[0.07] text-zinc-300 text-xs font-medium transition"
           >
             {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Share2 className="w-3.5 h-3.5" />}
             <span>{copied ? '링크 복사됨!' : '공유'}</span>
@@ -134,26 +133,26 @@ export default function FreeDocDetailPage() {
         </div>
 
         {/* 본문 카드 */}
-        <article className="p-6 sm:p-10 rounded-3xl bg-slate-900/50 border border-slate-800 shadow-xl mb-10">
-          <div className="flex items-center space-x-3 mb-4">
-            <span className="text-xs font-bold px-3 py-1 rounded-full bg-indigo-950/80 border border-indigo-500/40 text-indigo-300">
+        <article className="glass-panel p-6 sm:p-9 rounded-3xl shadow-xl mb-9">
+          <div className="flex items-center space-x-2.5 mb-3.5">
+            <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-indigo-950/40 border border-indigo-500/30 text-indigo-300">
               {doc.category}
             </span>
-            <span className="text-xs text-slate-300 font-semibold flex items-center space-x-1">
-              <User className="w-3.5 h-3.5 text-indigo-400" />
+            <span className="text-xs text-zinc-300 font-medium flex items-center space-x-1">
+              <User className="w-3 h-3 text-indigo-400" />
               <span>{doc.author}</span>
             </span>
-            <span className="text-xs text-slate-500 flex items-center space-x-1">
-              <Clock className="w-3.5 h-3.5" />
+            <span className="text-xs text-zinc-500 flex items-center space-x-1">
+              <Clock className="w-3 h-3" />
               <span>{doc.updatedAt}</span>
             </span>
           </div>
 
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-white mb-6">
+          <h1 className="text-xl sm:text-2xl font-bold text-white mb-5">
             {doc.title}
           </h1>
 
-          <div className="text-slate-300 text-sm sm:text-base leading-relaxed whitespace-pre-wrap pb-8 border-b border-slate-800/80">
+          <div className="text-zinc-300 text-sm sm:text-base leading-relaxed whitespace-pre-wrap pb-8 border-b border-white/[0.07]">
             {doc.content}
           </div>
 
@@ -161,24 +160,24 @@ export default function FreeDocDetailPage() {
           <div className="pt-6 flex items-center justify-center">
             <button
               onClick={handleLike}
-              className={`flex items-center space-x-2 px-6 py-3 rounded-2xl border transition shadow-lg ${
+              className={`flex items-center space-x-2 px-6 py-2.5 rounded-2xl border transition shadow-md ${
                 isLiked
-                  ? 'bg-indigo-600/30 border-indigo-500 text-indigo-300'
-                  : 'bg-slate-800 border-slate-700 text-slate-300 hover:border-indigo-500 hover:text-white'
+                  ? 'bg-indigo-600/30 border-indigo-500 text-indigo-200 shadow-indigo-600/20'
+                  : 'bg-white/[0.03] border-white/[0.08] text-zinc-300 hover:border-indigo-500/50 hover:text-white'
               }`}
             >
               <ThumbsUp className="w-4 h-4" />
-              <span className="text-sm font-bold">추천 {likes}</span>
+              <span className="text-xs font-bold font-mono">추천 {likes}</span>
             </button>
           </div>
         </article>
 
         {/* 유저 실시간 댓글 섹션 */}
-        <section className="p-6 sm:p-8 rounded-3xl bg-slate-900/40 border border-slate-800 shadow-xl">
-          <div className="flex items-center space-x-2 mb-6">
-            <MessageSquare className="w-5 h-5 text-indigo-400" />
-            <h2 className="text-base font-bold text-white">유저 댓글 & 추가 팁</h2>
-            <span className="text-xs bg-indigo-950 text-indigo-300 px-2 py-0.5 rounded-full border border-indigo-500/30 font-mono">
+        <section className="glass-panel p-6 sm:p-8 rounded-3xl shadow-xl">
+          <div className="flex items-center space-x-2 mb-5">
+            <MessageSquare className="w-4 h-4 text-indigo-400" />
+            <h2 className="text-sm font-bold text-white">유저 댓글 & 추가 팁</h2>
+            <span className="text-[11px] bg-indigo-950/60 text-indigo-300 px-2 py-0.5 rounded-full border border-indigo-500/30 font-mono">
               {comments.length}
             </span>
           </div>
@@ -192,9 +191,9 @@ export default function FreeDocDetailPage() {
                 value={authorName}
                 onChange={(e) => setAuthorName(e.target.value)}
                 required
-                className="w-48 px-3 py-1.5 rounded-xl bg-slate-800 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="w-44 px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/[0.1] text-xs text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
               />
-              <span className="text-[11px] text-slate-500">
+              <span className="text-[11px] text-zinc-500">
                 ✨ 닉네임만 적으면 즉시 등록됩니다.
               </span>
             </div>
@@ -206,13 +205,13 @@ export default function FreeDocDetailPage() {
                 onChange={(e) => setNewComment(e.target.value)}
                 rows={2}
                 required
-                className="w-full p-3 rounded-xl bg-slate-800/80 border border-slate-700 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+                className="w-full p-3 rounded-xl bg-white/[0.03] border border-white/[0.08] text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/60 resize-none"
               />
               <div className="flex justify-end mt-2">
                 <button
                   type="submit"
                   disabled={!newComment.trim()}
-                  className="flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-xs font-bold transition shadow-md shadow-indigo-600/30"
+                  className="flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-xs font-bold transition shadow-sm"
                 >
                   <Send className="w-3.5 h-3.5" />
                   <span>댓글 등록</span>
@@ -222,14 +221,14 @@ export default function FreeDocDetailPage() {
           </form>
 
           {/* 댓글 목록 */}
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {comments.map(c => (
-              <div key={c.id} className="p-4 rounded-xl bg-slate-900/60 border border-slate-800/60">
+              <div key={c.id} className="p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.05]">
                 <div className="flex items-center space-x-2 mb-1 text-xs">
-                  <span className="font-bold text-indigo-300">🎮 {c.author}</span>
-                  <span className="text-[11px] text-slate-500">• {c.createdAt}</span>
+                  <span className="font-semibold text-indigo-300">🎮 {c.author}</span>
+                  <span className="text-[11px] text-zinc-500">• {c.createdAt}</span>
                 </div>
-                <p className="text-xs text-slate-300 leading-relaxed whitespace-pre-wrap">{c.content}</p>
+                <p className="text-xs text-zinc-300 leading-relaxed whitespace-pre-wrap">{c.content}</p>
               </div>
             ))}
           </div>
