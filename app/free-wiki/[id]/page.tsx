@@ -113,29 +113,29 @@ export default function FreeDocDetailPage() {
 
       <main className="max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
         
-        {/* 상단 빵부스러기 및 공유 버튼 */}
-        <div className="flex items-center justify-between pb-5 border-b border-white/[0.07] mb-6">
+        {/* 상단 브레드크럼 및 공유 버튼 */}
+        <div className="flex items-center justify-between pb-4 border-b border-white/[0.07] mb-6">
           <div className="flex items-center space-x-2 text-xs text-zinc-400">
-            <Link href="/" className="hover:text-indigo-300 transition">홈</Link>
+            <Link href="/" className="hover:text-white transition">홈</Link>
             <ChevronRight className="w-3.5 h-3.5 text-zinc-600" />
-            <Link href="/free-wiki" className="hover:text-indigo-300 transition">자유 위키</Link>
+            <Link href="/free-wiki" className="hover:text-white transition">자유 게시판</Link>
             <ChevronRight className="w-3.5 h-3.5 text-zinc-600" />
-            <span className="text-indigo-300 font-medium truncate max-w-[200px]">{doc.title}</span>
+            <span className="text-zinc-200 font-medium truncate max-w-[200px]">{doc.title}</span>
           </div>
 
           <button
             onClick={handleShare}
-            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-white/[0.03] border border-white/[0.08] hover:bg-white/[0.07] text-zinc-300 text-xs font-medium transition"
+            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-white/[0.03] border border-white/[0.08] hover:bg-white/[0.07] text-zinc-300 text-xs font-medium transition active:scale-95"
           >
             {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Share2 className="w-3.5 h-3.5" />}
-            <span>{copied ? '링크 복사됨!' : '공유'}</span>
+            <span>{copied ? '복사됨!' : '공유'}</span>
           </button>
         </div>
 
         {/* 본문 카드 */}
-        <article className="glass-panel p-6 sm:p-9 rounded-3xl shadow-xl mb-9">
+        <article className="glass-panel p-6 sm:p-9 rounded-3xl shadow-xl mb-8">
           <div className="flex items-center space-x-2.5 mb-3.5">
-            <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-indigo-950/40 border border-indigo-500/30 text-indigo-300">
+            <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-white/[0.04] border border-white/[0.08] text-zinc-300">
               {doc.category}
             </span>
             <span className="text-xs text-zinc-300 font-medium flex items-center space-x-1">
@@ -160,10 +160,10 @@ export default function FreeDocDetailPage() {
           <div className="pt-6 flex items-center justify-center">
             <button
               onClick={handleLike}
-              className={`flex items-center space-x-2 px-6 py-2.5 rounded-2xl border transition shadow-md ${
+              className={`flex items-center space-x-2 px-6 py-2.5 rounded-full border transition shadow-sm active:scale-95 ${
                 isLiked
-                  ? 'bg-indigo-600/30 border-indigo-500 text-indigo-200 shadow-indigo-600/20'
-                  : 'bg-white/[0.03] border-white/[0.08] text-zinc-300 hover:border-indigo-500/50 hover:text-white'
+                  ? 'bg-indigo-600/20 border-indigo-500/50 text-indigo-200'
+                  : 'bg-white/[0.03] border-white/[0.08] text-zinc-300 hover:border-white/[0.18] hover:text-white'
               }`}
             >
               <ThumbsUp className="w-4 h-4" />
@@ -176,8 +176,8 @@ export default function FreeDocDetailPage() {
         <section className="glass-panel p-6 sm:p-8 rounded-3xl shadow-xl">
           <div className="flex items-center space-x-2 mb-5">
             <MessageSquare className="w-4 h-4 text-indigo-400" />
-            <h2 className="text-sm font-bold text-white">유저 댓글 & 추가 팁</h2>
-            <span className="text-[11px] bg-indigo-950/60 text-indigo-300 px-2 py-0.5 rounded-full border border-indigo-500/30 font-mono">
+            <h2 className="text-sm font-bold text-white">댓글 & 의견</h2>
+            <span className="text-[11px] bg-white/[0.04] text-zinc-300 px-2 py-0.5 rounded-full border border-white/[0.08] font-mono">
               {comments.length}
             </span>
           </div>
@@ -200,7 +200,7 @@ export default function FreeDocDetailPage() {
 
             <div className="relative">
               <textarea
-                placeholder="댓글이나 추가 꿀팁, 의견을 자유롭게 남겨보세요..."
+                placeholder="댓글이나 추가 팁, 의견을 남겨보세요..."
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
                 rows={2}
@@ -231,6 +231,12 @@ export default function FreeDocDetailPage() {
                 <p className="text-xs text-zinc-300 leading-relaxed whitespace-pre-wrap">{c.content}</p>
               </div>
             ))}
+
+            {comments.length === 0 && (
+              <p className="text-center py-6 text-xs text-zinc-500">
+                아직 작성된 댓글이 없습니다. 첫 댓글을 남겨보세요!
+              </p>
+            )}
           </div>
         </section>
       </main>
