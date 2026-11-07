@@ -166,9 +166,11 @@ export default function FreeWikiPage() {
                       <span className="text-[11px] text-slate-500">• {doc.updatedAt}</span>
                     </div>
 
-                    <h3 className="text-base sm:text-lg font-bold text-white">
-                      {doc.title}
-                    </h3>
+                    <Link href={`/free-wiki/${doc.id}`} className="group/title block">
+                      <h3 className="text-base sm:text-lg font-bold text-white group-hover/title:text-indigo-300 transition">
+                        {doc.title}
+                      </h3>
+                    </Link>
 
                     <p className="text-sm text-slate-300 leading-relaxed whitespace-pre-wrap">
                       {doc.content}
