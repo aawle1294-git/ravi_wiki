@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 import { FreeDoc } from '@/lib/wikiData'
-import { getFreeDocs, saveFreeDoc, likeFreeDoc, deleteFreeDoc, hasLikedDoc } from '@/lib/db'
+import { getFreeDocs, saveFreeDoc, likeFreeDoc, deleteFreeDoc, hasLikedDoc, isMyDoc } from '@/lib/db'
 import { useAuth } from '@/lib/auth'
 import MarkdownEditor from '@/components/MarkdownEditor'
 import { 
@@ -67,13 +67,19 @@ export default function FreeWikiPage() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('이 게시글을 삭제하시겠습니까?')) return
+    if (!confirm('정말 이 게시글을 삭제하시겠습니까?')) return
     setDeletingId(id)
-    const ok = await deleteFreeDoc(id)
-    if (ok) {
-      setDocs(prev => prev.filter(d => d.id !== id))
+    try {
+      const ok = await deleteFreeDoc(id)
+      if (ok) {
+        setDocs(prev => prev.filter(d => d.id !== id))
+      }
+    } catch (e) {
+      console.error('삭제 오류:', e)
+      alert('삭제 처리 중 오류가 발생했습니다.')
+    } finally {
+      setDeletingId(null)
     }
-    setDeletingId(null)
   }
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -233,12 +239,12 @@ export default function FreeWikiPage() {
                     </button>
 
                     {/* 삭제 버튼: 개발자는 모든 글, 일반 유저는 본인 글만 */}
-                    {(isDeveloper || doc.author === user.name) && (
+                    {(isDeveloper || doc.author === user.name || isMyDoc(doc.id)) && (
                       <button
                         onClick={() => handleDelete(doc.id)}
                         disabled={deletingId === doc.id}
-                        className="p-2 rounded-xl bg-rose-950/20 border border-rose-500/20 hover:bg-rose-950/40 hover:border-rose-500/40 text-rose-400/60 hover:text-rose-400 transition active:scale-95 disabled:opacity-50"
-                        title="게시글 삭제"
+                        className="p-2 rounded-xl bg-rose-950/25 border border-rose-500/30 hover:bg-rose-950/50 hover:border-rose-500/60 text-rose-400 hover:text-rose-200 transition active:scale-95 disabled:opacity-50"
+                        title={isDeveloper ? "👑 개발자 권한: 게시글 삭제" : "내가 작성한 글 삭제"}
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>

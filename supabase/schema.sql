@@ -63,8 +63,10 @@ ALTER TABLE public.free_docs ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Allow public read official_docs" ON public.official_docs FOR SELECT USING (true);
 CREATE POLICY "Allow public read free_docs" ON public.free_docs FOR SELECT USING (true);
 
--- 모든 사용자 쓰기(수정/추가) 허용 (앱 내에서 개발자 비밀번호로 제어)
+-- 모든 사용자 쓰기(수정/추가/삭제) 허용 (앱 내에서 개발자 비밀번호 및 작성자 검증으로 제어)
 CREATE POLICY "Allow public write official_docs" ON public.official_docs FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow public update official_docs" ON public.official_docs FOR UPDATE USING (true);
+CREATE POLICY "Allow public delete official_docs" ON public.official_docs FOR DELETE USING (true);
 CREATE POLICY "Allow public write free_docs" ON public.free_docs FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow public update free_docs" ON public.free_docs FOR UPDATE USING (true);
+CREATE POLICY "Allow public delete free_docs" ON public.free_docs FOR DELETE USING (true);

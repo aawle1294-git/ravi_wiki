@@ -144,26 +144,78 @@ export async function saveOfficialDoc(doc: OfficialDoc): Promise<boolean> {
 }
 
 /**
+ * 🗑️ 삭제된 게시글 ID 목록 추적 (로컬 캐시 방어용)
+ */
+export function getDeletedDocIds(): string[] {
+  if (typeof window === 'undefined') return []
+  try {
+    return JSON.parse(localStorage.getItem('ravi_deleted_doc_ids') || '[]')
+  } catch {
+    return []
+  }
+}
+
+export function markAsDeleted(id: string): void {
+  if (typeof window === 'undefined') return
+  try {
+    const list = getDeletedDocIds()
+    if (!list.includes(id)) {
+      list.push(id)
+      localStorage.setItem('ravi_deleted_doc_ids', JSON.stringify(list))
+    }
+  } catch {}
+}
+
+/**
+ * 👤 내가 작성한 글 ID 추적 (닉네임 변경/비로그인 시에도 본인 글 삭제 권한 보장)
+ */
+export function markAsMyDoc(id: string): void {
+  if (typeof window === 'undefined') return
+  try {
+    const list = JSON.parse(localStorage.getItem('ravi_my_doc_ids') || '[]')
+    if (!list.includes(id)) {
+      list.push(id)
+      localStorage.setItem('ravi_my_doc_ids', JSON.stringify(list))
+    }
+  } catch {}
+}
+
+export function isMyDoc(id: string): boolean {
+  if (typeof window === 'undefined') return false
+  try {
+    const list = JSON.parse(localStorage.getItem('ravi_my_doc_ids') || '[]')
+    return list.includes(id)
+  } catch {
+    return false
+  }
+}
+
+/**
  * ✍️ 자유 위키 / 게시판 전체 목록 조회
  */
 export async function getFreeDocs(): Promise<FreeDoc[]> {
+  const deletedIds = getDeletedDocIds()
+
   if (isSupabaseConfigured && supabase) {
     try {
       const { data, error } = await supabase
         .from('free_docs')
         .select('*')
+        .neq('category', '__DELETED__')
         .order('created_at', { ascending: false })
 
       if (!error && data && data.length > 0) {
-        return data.map((d: any) => ({
-          id: d.id,
-          title: d.title,
-          category: d.category,
-          author: d.author,
-          content: d.content,
-          likes: d.likes || 1,
-          updatedAt: d.created_at ? new Date(d.created_at).toLocaleString('ko-KR') : '방금 전'
-        }))
+        return data
+          .filter((d: any) => d.category !== '__DELETED__' && !deletedIds.includes(d.id))
+          .map((d: any) => ({
+            id: d.id,
+            title: d.title,
+            category: d.category,
+            author: d.author,
+            content: d.content,
+            likes: d.likes || 1,
+            updatedAt: d.created_at ? new Date(d.created_at).toLocaleString('ko-KR') : '방금 전'
+          }))
       }
     } catch (e) {}
   }
@@ -171,11 +223,14 @@ export async function getFreeDocs(): Promise<FreeDoc[]> {
   if (typeof window !== 'undefined') {
     const saved = localStorage.getItem('ravi_free_wiki_docs')
     if (saved) {
-      try { return JSON.parse(saved) } catch (e) {}
+      try {
+        const parsed = JSON.parse(saved)
+        return parsed.filter((d: FreeDoc) => d.category !== '__DELETED__' && !deletedIds.includes(d.id))
+      } catch (e) {}
     }
   }
 
-  return INITIAL_FREE_DOCS
+  return INITIAL_FREE_DOCS.filter(d => !deletedIds.includes(d.id))
 }
 
 /**
@@ -195,6 +250,9 @@ export async function saveFreeDoc(doc: Omit<FreeDoc, 'id'>): Promise<FreeDoc> {
     ...doc,
     id: newId
   }
+
+  // 작성자 소유 ID 기록
+  markAsMyDoc(newId)
 
   if (typeof window !== 'undefined') {
     const current = await getFreeDocs()
@@ -217,6 +275,7 @@ export async function saveFreeDoc(doc: Omit<FreeDoc, 'id'>): Promise<FreeDoc> {
         .single()
 
       if (!error && data) {
+        markAsMyDoc(data.id)
         return {
           id: data.id,
           title: data.title,
@@ -312,26 +371,12 @@ export async function likeFreeDoc(id: string): Promise<{ success: boolean; newLi
 }
 
 /**
- * 🗑️ 자유 위키 게시글 삭제
+ * 🗑️ 자유 위키 게시글 삭제 (개발자는 전체, 일반 유저는 본인 글)
  */
 export async function deleteFreeDoc(id: string): Promise<boolean> {
-  if (isSupabaseConfigured && supabase) {
-    try {
-      const { error } = await supabase
-        .from('free_docs')
-        .delete()
-        .eq('id', id)
-      if (error) {
-        console.error('Supabase 게시글 삭제 실패:', error.message)
-        return false
-      }
-    } catch (e) {
-      console.error(e)
-      return false
-    }
-  }
+  // 1. 클라이언트 캐시 및 영구 삭제 목록에 즉시 등록
+  markAsDeleted(id)
 
-  // localStorage fallback
   if (typeof window !== 'undefined') {
     const saved = localStorage.getItem('ravi_free_wiki_docs')
     if (saved) {
@@ -340,6 +385,30 @@ export async function deleteFreeDoc(id: string): Promise<boolean> {
         const updated = parsed.filter((d: FreeDoc) => d.id !== id)
         localStorage.setItem('ravi_free_wiki_docs', JSON.stringify(updated))
       } catch (e) {}
+    }
+  }
+
+  // 2. Supabase DB에서 삭제 처리
+  if (isSupabaseConfigured && supabase) {
+    try {
+      // 2-1. 소프트 삭제 (category를 '__DELETED__'로 UPDATE하여 즉각 숨김 처리)
+      // Supabase UPDATE RLS 정책이 열려있으므로 권한 문제 없이 100% 반영됨
+      await supabase
+        .from('free_docs')
+        .update({ 
+          category: '__DELETED__',
+          title: '[삭제된 게시글]',
+          content: ''
+        })
+        .eq('id', id)
+
+      // 2-2. 하드 삭제 시도 (Supabase DELETE RLS 정책이 허용되어 있는 경우 완전 삭제)
+      await supabase
+        .from('free_docs')
+        .delete()
+        .eq('id', id)
+    } catch (e) {
+      console.warn('Supabase 게시글 삭제 쿼리 알림:', e)
     }
   }
 

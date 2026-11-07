@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 import { FreeDoc } from '@/lib/wikiData'
-import { getFreeDocById, getFreeDocComments, addFreeDocComment, likeFreeDoc, deleteFreeDoc, hasLikedDoc, FreeDocComment } from '@/lib/db'
+import { getFreeDocById, getFreeDocComments, addFreeDocComment, likeFreeDoc, deleteFreeDoc, hasLikedDoc, isMyDoc, FreeDocComment } from '@/lib/db'
 import { useAuth } from '@/lib/auth'
 import WikiMarkdownRenderer from '@/components/WikiMarkdownRenderer'
 import { 
@@ -127,7 +127,7 @@ export default function FreeDocDetailPage() {
     )
   }
 
-  const canDelete = isDeveloper || doc.author === user.name
+  const canDelete = isDeveloper || doc.author === user.name || isMyDoc(doc.id)
 
   return (
     <div className="min-h-screen flex flex-col text-zinc-100">
