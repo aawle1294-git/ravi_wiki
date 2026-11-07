@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 import { FreeDoc } from '@/lib/wikiData'
 import { getFreeDocs, saveFreeDoc, likeFreeDoc } from '@/lib/db'

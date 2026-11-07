@@ -8,7 +8,6 @@ import {
   Copy, 
   Check, 
   ShieldCheck, 
-  Users, 
   LogIn, 
   LogOut, 
   KeyRound, 
@@ -19,12 +18,11 @@ import {
   MessageSquare
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth'
-
 import ServerStatusBadge from './ServerStatusBadge'
 
 export default function Navbar() {
   const pathname = usePathname()
-  const { user, loginAsDeveloper, loginAsPlayer, logout, isDeveloper } = useAuth()
+  const { user, loginAsDeveloper, loginAsPlayer, logout } = useAuth()
   
   const [copied, setCopied] = useState(false)
   const [showLoginModal, setShowLoginModal] = useState(false)
@@ -67,110 +65,110 @@ export default function Navbar() {
   return (
     <>
       <header className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 text-slate-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
           
-          {/* 로고 */}
-          <div className="flex items-center space-x-6">
-            <Link href="/" className="flex items-center space-x-2.5 group">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-purple-500/20 group-hover:scale-105 transition-transform">
-                <Sword className="w-5 h-5" />
+          {/* 좌측: 로고 & 메인 메뉴 */}
+          <div className="flex items-center space-x-4 sm:space-x-6 shrink-0">
+            <Link href="/" className="flex items-center space-x-2.5 group shrink-0">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-purple-500/20 group-hover:scale-105 transition-transform shrink-0">
+                <Sword className="w-4 h-4" />
               </div>
-              <div>
-                <span className="font-black text-lg tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-200">
+              <div className="whitespace-nowrap">
+                <span className="font-black text-base sm:text-lg tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-200">
                   라비서버 위키
                 </span>
-                <span className="block text-[10px] text-purple-400/80 -mt-1 font-mono tracking-widest">
+                <span className="block text-[9px] text-purple-400/80 -mt-1 font-mono tracking-widest">
                   RAVI SERVER
                 </span>
               </div>
             </Link>
 
-            {/* 메인 2대 탭: 공식 위키 & 자유 위키/게시판 */}
-            <nav className="hidden md:flex items-center space-x-2 text-sm font-medium">
+            {/* 메인 2대 탭: 한 줄로 깔끔하게 고정 */}
+            <nav className="hidden md:flex items-center space-x-1.5 text-xs font-semibold whitespace-nowrap shrink-0">
               <Link
                 href="/official"
-                className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-xl transition ${
+                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl transition shrink-0 ${
                   pathname.startsWith('/official')
                     ? 'bg-purple-600/20 border border-purple-500/50 text-purple-200 font-bold'
-                    : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
+                    : 'text-slate-300 hover:bg-slate-800 hover:text-white'
                 }`}
               >
-                <BookOpen className="w-4 h-4 text-purple-400" />
-                <span>📘 공식 위키 (개발자 전용)</span>
+                <BookOpen className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                <span className="whitespace-nowrap">📘 공식 위키</span>
               </Link>
 
               <Link
                 href="/free-wiki"
-                className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-xl transition ${
+                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl transition shrink-0 ${
                   pathname.startsWith('/free-wiki')
                     ? 'bg-indigo-600/20 border border-indigo-500/50 text-indigo-200 font-bold'
-                    : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
+                    : 'text-slate-300 hover:bg-slate-800 hover:text-white'
                 }`}
               >
-                <MessageSquare className="w-4 h-4 text-indigo-400" />
-                <span>✍️ 자유 위키 / 게시판 (플레이어)</span>
+                <MessageSquare className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                <span className="whitespace-nowrap">✍️ 자유 위키</span>
               </Link>
             </nav>
           </div>
 
           {/* 우측 영역: 서버 상태 + IP 복사 + 로그인 / 권한 상태 */}
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2 sm:space-x-3 shrink-0 whitespace-nowrap">
             
             {/* 실시간 서버 온라인 뱃지 */}
             <ServerStatusBadge />
 
-            {/* 서버 IP 복사 */}
+            {/* 서버 IP 복사 버튼 */}
             <button
               onClick={copyServerIp}
-              className="hidden sm:flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700/80 border border-slate-700 text-xs font-mono text-purple-300 transition"
+              className="hidden sm:flex items-center space-x-1.5 px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700/80 border border-slate-700 text-xs font-mono text-purple-300 transition whitespace-nowrap shrink-0"
               title="클릭하여 서버 주소 복사"
             >
-              <span>mcravi.m-c.kr</span>
-              {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-slate-400" />}
+              <span className="whitespace-nowrap">mcravi.m-c.kr</span>
+              {copied ? <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" /> : <Copy className="w-3.5 h-3.5 text-slate-400 shrink-0" />}
             </button>
 
             {/* 로그인 상태 */}
             {user.role === 'developer' ? (
-              <div className="flex items-center space-x-2 bg-purple-950/80 border border-purple-500/50 px-3 py-1.5 rounded-xl text-xs font-bold text-purple-200">
-                <ShieldCheck className="w-4 h-4 text-purple-400" />
-                <span>👑 개발자 모드 (수정 가능)</span>
+              <div className="flex items-center space-x-1.5 bg-purple-950/90 border border-purple-500/50 px-2.5 py-1.5 rounded-xl text-xs font-bold text-purple-200 whitespace-nowrap shrink-0">
+                <ShieldCheck className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                <span className="whitespace-nowrap">👑 개발자</span>
                 <button
                   onClick={logout}
-                  className="ml-2 text-slate-400 hover:text-red-400 transition"
+                  className="ml-1 text-slate-400 hover:text-red-400 transition"
                   title="로그아웃"
                 >
-                  <LogOut className="w-3.5 h-3.5" />
+                  <LogOut className="w-3.5 h-3.5 shrink-0" />
                 </button>
               </div>
             ) : user.role === 'player' ? (
-              <div className="flex items-center space-x-2 bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-200">
-                <UserCheck className="w-4 h-4 text-emerald-400" />
-                <span>🎮 {user.name}</span>
+              <div className="flex items-center space-x-1.5 bg-slate-800 border border-slate-700 px-2.5 py-1.5 rounded-xl text-xs font-bold text-slate-200 whitespace-nowrap shrink-0">
+                <UserCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                <span className="whitespace-nowrap truncate max-w-[100px]">🎮 {user.name}</span>
                 <button
                   onClick={logout}
-                  className="ml-2 text-slate-400 hover:text-red-400 transition"
+                  className="ml-1 text-slate-400 hover:text-red-400 transition"
                   title="로그아웃"
                 >
-                  <LogOut className="w-3.5 h-3.5" />
+                  <LogOut className="w-3.5 h-3.5 shrink-0" />
                 </button>
               </div>
             ) : (
               <button
                 onClick={() => setShowLoginModal(true)}
-                className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold shadow-lg shadow-purple-600/30 transition"
+                className="flex items-center space-x-1 px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold shadow-md shadow-purple-600/30 transition whitespace-nowrap shrink-0"
               >
-                <LogIn className="w-3.5 h-3.5" />
-                <span>로그인</span>
+                <LogIn className="w-3.5 h-3.5 shrink-0" />
+                <span className="whitespace-nowrap">로그인</span>
               </button>
             )}
           </div>
         </div>
 
         {/* 모바일 탭 네비게이션 */}
-        <div className="flex md:hidden border-t border-slate-800/80 px-4 py-2 space-x-2 text-xs">
+        <div className="flex md:hidden border-t border-slate-800/80 px-4 py-2 space-x-2 text-xs whitespace-nowrap">
           <Link
             href="/official"
-            className={`flex-1 py-1.5 text-center rounded-lg font-semibold ${
+            className={`flex-1 py-1.5 text-center rounded-lg font-semibold whitespace-nowrap ${
               pathname.startsWith('/official') ? 'bg-purple-600/30 text-purple-300' : 'text-slate-400'
             }`}
           >
@@ -178,16 +176,16 @@ export default function Navbar() {
           </Link>
           <Link
             href="/free-wiki"
-            className={`flex-1 py-1.5 text-center rounded-lg font-semibold ${
+            className={`flex-1 py-1.5 text-center rounded-lg font-semibold whitespace-nowrap ${
               pathname.startsWith('/free-wiki') ? 'bg-indigo-600/30 text-indigo-300' : 'text-slate-400'
             }`}
           >
-            ✍️ 자유 위키/게시판
+            ✍️ 자유 위키
           </Link>
         </div>
       </header>
 
-      {/* 로그인 모달 (개발자 로그인 vs 플레이어 로그인) */}
+      {/* 로그인 모달 */}
       {showLoginModal && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-sm w-full p-6 sm:p-7 shadow-2xl text-slate-100">
@@ -205,7 +203,7 @@ export default function Navbar() {
               </button>
             </div>
 
-            {/* 탭 전환: 개발자 로그인 vs 플레이어 로그인 */}
+            {/* 탭 전환 */}
             <div className="grid grid-cols-2 gap-1.5 bg-slate-950 p-1 rounded-xl mb-5 text-xs font-semibold">
               <button
                 type="button"
