@@ -1,16 +1,14 @@
-'use client'
+﻿'use client'
 
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
-import WikiMarkdownRenderer from '@/components/WikiMarkdownRenderer'
+import MarkdownEditor from '@/components/MarkdownEditor'
 import { OfficialDoc } from '@/lib/wikiData'
 import { useAuth } from '@/lib/auth'
 import { 
   ArrowLeft, 
-  Eye, 
-  Edit3, 
   Save, 
   ShieldCheck,
   Lock
@@ -26,7 +24,6 @@ export default function NewOfficialDocPage() {
   const [icon, setIcon] = useState('📜')
   const [description, setDescription] = useState('')
   const [content, setContent] = useState(`## 1. 개요\n여기에 공식 시스템 개요를 작성하세요.\n\n## 2. 상세 정보\n- 공식 정보 1\n- 공식 정보 2\n\n## 3. 유의사항\n> 반드시 지켜야 할 규칙이나 안내 사항입니다.`)
-  const [previewTab, setPreviewTab] = useState<'edit' | 'preview'>('edit')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -204,53 +201,17 @@ export default function NewOfficialDocPage() {
               </div>
             </div>
 
-            {/* 본문 에디터 & 미리보기 탭 */}
+            {/* 본문 마크다운 에디터 */}
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="text-xs font-semibold text-zinc-300">
-                  공식 문서 본문 (마크다운) *
-                </label>
-                <div className="flex items-center space-x-1 bg-white/[0.04] p-1 rounded-xl border border-white/[0.08]">
-                  <button
-                    type="button"
-                    onClick={() => setPreviewTab('edit')}
-                    className={`flex items-center space-x-1 px-3 py-1 rounded-lg text-xs font-semibold transition ${
-                      previewTab === 'edit'
-                        ? 'bg-indigo-600 text-white shadow-sm'
-                        : 'text-zinc-400 hover:text-zinc-200'
-                    }`}
-                  >
-                    <Edit3 className="w-3.5 h-3.5" />
-                    <span>작성</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPreviewTab('preview')}
-                    className={`flex items-center space-x-1 px-3 py-1 rounded-lg text-xs font-semibold transition ${
-                      previewTab === 'preview'
-                        ? 'bg-indigo-600 text-white shadow-sm'
-                        : 'text-zinc-400 hover:text-zinc-200'
-                    }`}
-                  >
-                    <Eye className="w-3.5 h-3.5" />
-                    <span>미리보기</span>
-                  </button>
-                </div>
-              </div>
-
-              {previewTab === 'edit' ? (
-                <textarea
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  rows={14}
-                  required
-                  className="w-full p-4 rounded-2xl bg-black/40 border border-white/[0.1] text-zinc-200 font-mono text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-indigo-500/60 resize-y"
-                />
-              ) : (
-                <div className="p-6 rounded-2xl bg-black/40 border border-white/[0.08] min-h-[350px]">
-                  <WikiMarkdownRenderer content={content} />
-                </div>
-              )}
+              <label className="block text-xs font-semibold text-zinc-300 mb-2">
+                공식 문서 본문 (마크다운 툴바 & 실시간 미리보기) *
+              </label>
+              <MarkdownEditor
+                value={content}
+                onChange={setContent}
+                placeholder="시스템 개요 및 가이드 내용을 작성하세요..."
+                minHeight="360px"
+              />
             </div>
 
             <div className="flex items-center justify-between pt-4 border-t border-white/[0.08]">

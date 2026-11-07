@@ -6,6 +6,7 @@ import Navbar from '@/components/Navbar'
 import { FreeDoc } from '@/lib/wikiData'
 import { getFreeDocs, saveFreeDoc, likeFreeDoc, deleteFreeDoc, hasLikedDoc } from '@/lib/db'
 import { useAuth } from '@/lib/auth'
+import MarkdownEditor from '@/components/MarkdownEditor'
 import { 
   MessageSquare, 
   Plus, 
@@ -266,7 +267,7 @@ export default function FreeWikiPage() {
       {/* 자유 글쓰기 모달 */}
       {showModal && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="glass-panel rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl text-zinc-100 border border-white/[0.1]">
+          <div className="glass-panel rounded-3xl max-w-3xl w-full p-6 sm:p-7 shadow-2xl text-zinc-100 border border-white/[0.1] max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-3 border-b border-white/[0.08] mb-4">
               <h3 className="text-base font-bold text-white flex items-center space-x-2">
                 <Sparkles className="w-4 h-4 text-indigo-400" />
@@ -325,14 +326,12 @@ export default function FreeWikiPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-zinc-300 mb-1">본문 내용</label>
-                <textarea
-                  placeholder="공략이나 질문, 정보를 자세히 적어주세요..."
+                <label className="block text-xs font-semibold text-zinc-300 mb-1">본문 내용 (마크다운 지원)</label>
+                <MarkdownEditor
                   value={newContent}
-                  onChange={(e) => setNewContent(e.target.value)}
-                  rows={5}
-                  required
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-white/[0.1] text-sm text-zinc-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/60 resize-none"
+                  onChange={setNewContent}
+                  placeholder="공략이나 질문, 정보를 자세히 적어주세요... (# 제목, **굵게**, - 목록 등 마크다운 사용 가능)"
+                  minHeight="220px"
                 />
               </div>
 

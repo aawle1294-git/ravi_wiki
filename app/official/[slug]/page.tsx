@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 import WikiMarkdownRenderer from '@/components/WikiMarkdownRenderer'
+import MarkdownEditor from '@/components/MarkdownEditor'
 import { OfficialDoc } from '@/lib/wikiData'
 import { getOfficialDocBySlug, getOfficialDocs, saveOfficialDoc } from '@/lib/db'
 import { useAuth } from '@/lib/auth'
@@ -38,7 +39,7 @@ export default function OfficialDocDetailPage() {
       if (d) {
         setDoc(d)
         setEditTitle(d.title)
-        setEditContent(d.content)
+        setEditContent((d.content || '').replace(/\\n/g, '\n').replace(/\\r/g, ''))
       }
     })
 
@@ -208,15 +209,14 @@ export default function OfficialDocDetailPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-zinc-300 mb-1">
-                    문서 본문 (GitHub Flavored Markdown)
+                  <label className="block text-xs font-semibold text-zinc-300 mb-2">
+                    문서 본문 (마크다운 편집기 & 실시간 미리보기)
                   </label>
-                  <textarea
+                  <MarkdownEditor
                     value={editContent}
-                    onChange={(e) => setEditContent(e.target.value)}
-                    rows={18}
-                    required
-                    className="w-full p-4 rounded-xl bg-black/40 border border-white/[0.1] text-zinc-200 font-mono text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-indigo-500/60 resize-y"
+                    onChange={setEditContent}
+                    placeholder="공식 시스템 가이드 마크다운을 작성하세요..."
+                    minHeight="380px"
                   />
                 </div>
 
