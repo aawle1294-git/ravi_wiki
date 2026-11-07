@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 import { FreeDoc } from '@/lib/wikiData'
-import { getFreeDocs, saveFreeDoc, likeFreeDoc } from '@/lib/db'
+import { getFreeDocs, saveFreeDoc, likeFreeDoc, deleteFreeDoc, hasLikedDoc } from '@/lib/db'
 import { useAuth } from '@/lib/auth'
 import { 
   MessageSquare, 
@@ -14,17 +14,20 @@ import {
   Search, 
   Send,
   ExternalLink,
-  X
+  X,
+  Trash2
 } from 'lucide-react'
 
 export default function FreeWikiPage() {
-  const { user } = useAuth()
+  const { user, isDeveloper } = useAuth()
   
   const [docs, setDocs] = useState<FreeDoc[]>([])
   const [selectedCat, setSelectedCat] = useState('전체')
   const [searchQuery, setSearchQuery] = useState('')
   const [showModal, setShowModal] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [likedIds, setLikedIds] = useState<Set<string>>(new Set())
+  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   // 폼 입력 상태
   const [newTitle, setNewTitle] = useState('')
@@ -43,12 +46,33 @@ export default function FreeWikiPage() {
     getFreeDocs().then(list => {
       setDocs(list)
       setLoading(false)
+      // 이미 좋아요 누른 ID 초기화
+      const liked = new Set(list.map(d => d.id).filter(id => hasLikedDoc(id)))
+      setLikedIds(liked)
     })
   }, [user])
 
   const handleLike = async (id: string) => {
-    setDocs(prev => prev.map(d => d.id === id ? { ...d, likes: d.likes + 1 } : d))
-    await likeFreeDoc(id)
+    if (likedIds.has(id)) return // 이미 좋아요 누름
+    const result = await likeFreeDoc(id)
+    if (result.success) {
+      setLikedIds(prev => new Set([...prev, id]))
+      setDocs(prev => prev.map(d =>
+        d.id === id
+          ? { ...d, likes: result.newLikes !== undefined ? result.newLikes : d.likes + 1 }
+          : d
+      ))
+    }
+  }
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('이 게시글을 삭제하시겠습니까?')) return
+    setDeletingId(id)
+    const ok = await deleteFreeDoc(id)
+    if (ok) {
+      setDocs(prev => prev.filter(d => d.id !== id))
+    }
+    setDeletingId(null)
   }
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -191,15 +215,34 @@ export default function FreeWikiPage() {
                     </p>
                   </div>
 
-                  {/* 추천 버튼 */}
-                  <button
-                    onClick={() => handleLike(doc.id)}
-                    className="flex flex-col items-center justify-center p-2.5 rounded-xl bg-white/[0.02] border border-white/[0.06] hover:border-white/[0.15] hover:bg-white/[0.05] text-zinc-400 hover:text-white transition shrink-0 active:scale-95"
-                    title="추천하기"
-                  >
-                    <ThumbsUp className="w-4 h-4 mb-1" />
-                    <span className="text-xs font-bold font-mono">{doc.likes}</span>
-                  </button>
+                  {/* 추천 + 삭제 버튼 묶음 */}
+                  <div className="flex flex-col items-center gap-1.5 shrink-0">
+                    <button
+                      onClick={() => handleLike(doc.id)}
+                      disabled={likedIds.has(doc.id)}
+                      className={`flex flex-col items-center justify-center p-2.5 rounded-xl border transition active:scale-95 ${
+                        likedIds.has(doc.id)
+                          ? 'bg-indigo-600/15 border-indigo-500/40 text-indigo-300 cursor-default'
+                          : 'bg-white/[0.02] border-white/[0.06] hover:border-white/[0.15] hover:bg-white/[0.05] text-zinc-400 hover:text-white'
+                      }`}
+                      title={likedIds.has(doc.id) ? '이미 추천한 게시글' : '추천하기'}
+                    >
+                      <ThumbsUp className="w-4 h-4 mb-1" />
+                      <span className="text-xs font-bold font-mono">{doc.likes}</span>
+                    </button>
+
+                    {/* 삭제 버튼: 개발자는 모든 글, 일반 유저는 본인 글만 */}
+                    {(isDeveloper || doc.author === user.name) && (
+                      <button
+                        onClick={() => handleDelete(doc.id)}
+                        disabled={deletingId === doc.id}
+                        className="p-2 rounded-xl bg-rose-950/20 border border-rose-500/20 hover:bg-rose-950/40 hover:border-rose-500/40 text-rose-400/60 hover:text-rose-400 transition active:scale-95 disabled:opacity-50"
+                        title="게시글 삭제"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}

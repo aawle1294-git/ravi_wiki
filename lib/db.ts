@@ -234,27 +234,116 @@ export async function saveFreeDoc(doc: Omit<FreeDoc, 'id'>): Promise<FreeDoc> {
 }
 
 /**
- * ✍️ 자유 위키 추천(좋아요)
+ * ✍️ 좋아요 중복 방지용 로컬 추적
  */
-export async function likeFreeDoc(id: string): Promise<void> {
+export function hasLikedDoc(id: string): boolean {
+  if (typeof window === 'undefined') return false
+  const liked = JSON.parse(localStorage.getItem('ravi_liked_docs') || '[]')
+  return liked.includes(id)
+}
+
+export function markDocAsLiked(id: string): void {
+  if (typeof window === 'undefined') return
+  const liked = JSON.parse(localStorage.getItem('ravi_liked_docs') || '[]')
+  if (!liked.includes(id)) {
+    liked.push(id)
+    localStorage.setItem('ravi_liked_docs', JSON.stringify(liked))
+  }
+}
+
+/**
+ * ✍️ 자유 위키 추천(좋아요) - 중복 방지
+ */
+export async function likeFreeDoc(id: string): Promise<{ success: boolean; newLikes?: number }> {
+  if (hasLikedDoc(id)) {
+    return { success: false }
+  }
+
+  markDocAsLiked(id)
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      // 현재 likes 값 먼저 조회
+      const { data: current } = await supabase
+        .from('free_docs')
+        .select('likes')
+        .eq('id', id)
+        .single()
+
+      const currentLikes = current?.likes ?? 0
+
+      // RPC 시도, 실패 시 직접 UPDATE
+      const { error: rpcError } = await supabase.rpc('increment_likes', { doc_id: id })
+      if (rpcError) {
+        // RPC 없으면 직접 UPDATE
+        await supabase
+          .from('free_docs')
+          .update({ likes: currentLikes + 1 })
+          .eq('id', id)
+      }
+
+      // 최신 likes 값 반환
+      const { data: updated } = await supabase
+        .from('free_docs')
+        .select('likes')
+        .eq('id', id)
+        .single()
+      return { success: true, newLikes: updated?.likes ?? currentLikes + 1 }
+    } catch (e) {}
+  }
+
+  // localStorage fallback
   if (typeof window !== 'undefined') {
     const saved = localStorage.getItem('ravi_free_wiki_docs')
     if (saved) {
       try {
         const parsed = JSON.parse(saved)
-        const updated = parsed.map((d: FreeDoc) => 
+        const updated = parsed.map((d: FreeDoc) =>
           d.id === id ? { ...d, likes: d.likes + 1 } : d
         )
+        localStorage.setItem('ravi_free_wiki_docs', JSON.stringify(updated))
+        const newDoc = updated.find((d: FreeDoc) => d.id === id)
+        return { success: true, newLikes: newDoc?.likes }
+      } catch (e) {}
+    }
+  }
+
+  return { success: true }
+}
+
+/**
+ * 🗑️ 자유 위키 게시글 삭제
+ */
+export async function deleteFreeDoc(id: string): Promise<boolean> {
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { error } = await supabase
+        .from('free_docs')
+        .delete()
+        .eq('id', id)
+      if (error) {
+        console.error('Supabase 게시글 삭제 실패:', error.message)
+        return false
+      }
+    } catch (e) {
+      console.error(e)
+      return false
+    }
+  }
+
+  // localStorage fallback
+  if (typeof window !== 'undefined') {
+    const saved = localStorage.getItem('ravi_free_wiki_docs')
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        const updated = parsed.filter((d: FreeDoc) => d.id !== id)
         localStorage.setItem('ravi_free_wiki_docs', JSON.stringify(updated))
       } catch (e) {}
     }
   }
 
-  if (isSupabaseConfigured && supabase) {
-    try {
-      await supabase.rpc('increment_likes', { doc_id: id })
-    } catch (e) {}
-  }
+  return true
 }
 
 /**

@@ -1,11 +1,11 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 import { FreeDoc } from '@/lib/wikiData'
-import { getFreeDocById, getFreeDocComments, addFreeDocComment, likeFreeDoc, FreeDocComment } from '@/lib/db'
+import { getFreeDocById, getFreeDocComments, addFreeDocComment, likeFreeDoc, deleteFreeDoc, hasLikedDoc, FreeDocComment } from '@/lib/db'
 import { useAuth } from '@/lib/auth'
 import { 
   MessageSquare, 
@@ -16,13 +16,15 @@ import {
   Send, 
   ArrowLeft,
   Share2,
-  Check
+  Check,
+  Trash2
 } from 'lucide-react'
 
 export default function FreeDocDetailPage() {
   const params = useParams()
+  const router = useRouter()
   const id = (params?.id as string) || ''
-  const { user } = useAuth()
+  const { user, isDeveloper } = useAuth()
 
   const [doc, setDoc] = useState<FreeDoc | null>(null)
   const [comments, setComments] = useState<FreeDocComment[]>([])
@@ -32,6 +34,7 @@ export default function FreeDocDetailPage() {
   const [isLiked, setIsLiked] = useState(false)
   const [copied, setCopied] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   useEffect(() => {
     if (user.role === 'player') {
@@ -45,6 +48,7 @@ export default function FreeDocDetailPage() {
         if (d) {
           setDoc(d)
           setLikes(d.likes)
+          setIsLiked(hasLikedDoc(id))
         }
         setLoading(false)
       })
@@ -57,9 +61,24 @@ export default function FreeDocDetailPage() {
 
   const handleLike = async () => {
     if (!doc || isLiked) return
-    setLikes(prev => prev + 1)
-    setIsLiked(true)
-    await likeFreeDoc(doc.id)
+    const result = await likeFreeDoc(doc.id)
+    if (result.success) {
+      setIsLiked(true)
+      setLikes(result.newLikes !== undefined ? result.newLikes : likes + 1)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!doc) return
+    if (!confirm('이 게시글을 삭제하시겠습니까?')) return
+    setIsDeleting(true)
+    const ok = await deleteFreeDoc(doc.id)
+    if (ok) {
+      router.push('/free-wiki')
+    } else {
+      alert('삭제 중 오류가 발생했습니다.')
+      setIsDeleting(false)
+    }
   }
 
   const handleAddComment = async (e: React.FormEvent) => {
@@ -107,13 +126,15 @@ export default function FreeDocDetailPage() {
     )
   }
 
+  const canDelete = isDeveloper || doc.author === user.name
+
   return (
     <div className="min-h-screen flex flex-col text-zinc-100">
       <Navbar />
 
       <main className="max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
         
-        {/* 상단 브레드크럼 및 공유 버튼 */}
+        {/* 상단 브레드크럼 및 공유/삭제 버튼 */}
         <div className="flex items-center justify-between pb-4 border-b border-white/[0.07] mb-6">
           <div className="flex items-center space-x-2 text-xs text-zinc-400">
             <Link href="/" className="hover:text-white transition">홈</Link>
@@ -123,13 +144,27 @@ export default function FreeDocDetailPage() {
             <span className="text-zinc-200 font-medium truncate max-w-[200px]">{doc.title}</span>
           </div>
 
-          <button
-            onClick={handleShare}
-            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-white/[0.03] border border-white/[0.08] hover:bg-white/[0.07] text-zinc-300 text-xs font-medium transition active:scale-95"
-          >
-            {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Share2 className="w-3.5 h-3.5" />}
-            <span>{copied ? '복사됨!' : '공유'}</span>
-          </button>
+          <div className="flex items-center space-x-2">
+            {/* 삭제 버튼: 개발자는 모든 글, 일반 유저는 본인 글만 */}
+            {canDelete && (
+              <button
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-rose-950/20 border border-rose-500/25 hover:bg-rose-950/40 hover:border-rose-500/50 text-rose-400 text-xs font-medium transition active:scale-95 disabled:opacity-50"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>{isDeleting ? '삭제 중...' : '삭제'}</span>
+              </button>
+            )}
+
+            <button
+              onClick={handleShare}
+              className="flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-white/[0.03] border border-white/[0.08] hover:bg-white/[0.07] text-zinc-300 text-xs font-medium transition active:scale-95"
+            >
+              {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Share2 className="w-3.5 h-3.5" />}
+              <span>{copied ? '복사됨!' : '공유'}</span>
+            </button>
+          </div>
         </div>
 
         {/* 본문 카드 */}
@@ -160,14 +195,17 @@ export default function FreeDocDetailPage() {
           <div className="pt-6 flex items-center justify-center">
             <button
               onClick={handleLike}
+              disabled={isLiked}
               className={`flex items-center space-x-2 px-6 py-2.5 rounded-full border transition shadow-sm active:scale-95 ${
                 isLiked
-                  ? 'bg-indigo-600/20 border-indigo-500/50 text-indigo-200'
+                  ? 'bg-indigo-600/20 border-indigo-500/50 text-indigo-200 cursor-default'
                   : 'bg-white/[0.03] border-white/[0.08] text-zinc-300 hover:border-white/[0.18] hover:text-white'
               }`}
             >
               <ThumbsUp className="w-4 h-4" />
-              <span className="text-xs font-bold font-mono">추천 {likes}</span>
+              <span className="text-xs font-bold font-mono">
+                {isLiked ? '추천됨' : '추천'} {likes}
+              </span>
             </button>
           </div>
         </article>
