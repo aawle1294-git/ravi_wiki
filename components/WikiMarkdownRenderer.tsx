@@ -3,6 +3,7 @@
 import React from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import rehypeRaw from 'rehype-raw'
 
 interface Props {
   content: string
@@ -18,6 +19,7 @@ export default function WikiMarkdownRenderer({ content }: Props) {
     <div className="w-full min-w-0 text-zinc-200 leading-relaxed font-sans break-words space-y-4">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
+        rehypePlugins={[rehypeRaw]}
         components={{
           h1: ({ node, ...props }) => (
             <h1 className="text-2xl sm:text-3xl font-extrabold text-white pb-3 border-b border-white/[0.08] mt-6 mb-4 flex items-center space-x-2 tracking-tight" {...props} />

@@ -7,6 +7,7 @@ import Navbar from '@/components/Navbar'
 import { FreeDoc } from '@/lib/wikiData'
 import { getFreeDocById, getFreeDocComments, addFreeDocComment, likeFreeDoc, deleteFreeDoc, hasLikedDoc, FreeDocComment } from '@/lib/db'
 import { useAuth } from '@/lib/auth'
+import WikiMarkdownRenderer from '@/components/WikiMarkdownRenderer'
 import { 
   MessageSquare, 
   ThumbsUp, 
@@ -187,8 +188,8 @@ export default function FreeDocDetailPage() {
             {doc.title}
           </h1>
 
-          <div className="text-zinc-300 text-sm sm:text-base leading-relaxed whitespace-pre-wrap pb-8 border-b border-white/[0.07]">
-            {doc.content}
+          <div className="pb-8 border-b border-white/[0.07]">
+            <WikiMarkdownRenderer content={doc.content} />
           </div>
 
           {/* 추천 버튼 */}
