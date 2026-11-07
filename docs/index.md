@@ -40,7 +40,7 @@ features:
 - **서버 주소 (IP):** `mcravi.m-c.kr`
 - **지원 버전:** 마인크래프트 자바 에디션 (JE) 최신 버전 계열 (1.21.x 지원)
 - **공식 사이트:** [mcravi.kr](https://mcravi.kr)
-- **공식 디스코드:** [디스코드 바로가기](https://discord.com/invite/qeZCRqqbhs)
+- **공식 디스코드:** [디스코드 바로가기](https://discord.com/invite/jRkzZZ9kXp)
 :::
 
 ### 💡 주요 카테고리 바로가기

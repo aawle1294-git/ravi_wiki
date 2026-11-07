@@ -106,7 +106,7 @@ export default function FreeWikiPage() {
 
             <div className="flex items-center gap-3">
               <a
-                href="https://discord.com/invite/qeZCRqqbhs"
+                href="https://discord.com/invite/jRkzZZ9kXp"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hidden md:flex items-center space-x-1.5 px-4 py-3 rounded-2xl bg-[#5865F2]/10 hover:bg-[#5865F2]/20 border border-[#5865F2]/30 text-[#828cf7] text-xs font-semibold transition"

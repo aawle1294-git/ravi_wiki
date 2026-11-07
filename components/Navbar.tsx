@@ -134,7 +134,7 @@ export default function Navbar() {
 
             {/* 공식 디스코드 바로가기 버튼 */}
             <a
-              href="https://discord.com/invite/qeZCRqqbhs"
+              href="https://discord.com/invite/jRkzZZ9kXp"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center space-x-1.5 px-2.5 sm:px-3 py-1.5 rounded-full bg-[#5865F2]/10 hover:bg-[#5865F2]/20 border border-[#5865F2]/30 text-[#828cf7] hover:text-white text-xs font-medium transition-all shrink-0 group active:scale-95 shadow-[0_0_12px_rgba(88,101,242,0.12)]"

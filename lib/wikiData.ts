@@ -38,7 +38,7 @@ export const INITIAL_OFFICIAL_DOCS: OfficialDoc[] = [
 * **서버 주소 (IP):** \`mcravi.m-c.kr\`
 * **지원 버전:** 마인크래프트 자바 에디션 (Java Edition) 1.21.x 계열
 * **공식 웹사이트:** [https://mcravi.kr](https://mcravi.kr)
-* **공식 디스코드:** [https://discord.com/invite/qeZCRqqbhs](https://discord.com/invite/qeZCRqqbhs)
+* **공식 디스코드:** [https://discord.com/invite/jRkzZZ9kXp](https://discord.com/invite/jRkzZZ9kXp)
 
 ---
 

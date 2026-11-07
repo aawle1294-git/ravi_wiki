@@ -96,7 +96,7 @@ export default function HomePage() {
 
               {/* 공식 디스코드 버튼 */}
               <a
-                href="https://discord.com/invite/qeZCRqqbhs"
+                href="https://discord.com/invite/jRkzZZ9kXp"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full sm:w-auto flex items-center justify-center space-x-2 px-6 py-3.5 rounded-2xl bg-[#5865F2] hover:bg-[#4752c4] text-white font-semibold text-sm transition-all shadow-sm hover:shadow-[0_0_20px_rgba(88,101,242,0.35)] active:scale-[0.98] shrink-0"
@@ -252,7 +252,7 @@ export default function HomePage() {
               </div>
 
               <a
-                href="https://discord.com/invite/qeZCRqqbhs"
+                href="https://discord.com/invite/jRkzZZ9kXp"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-center space-x-2.5 px-6 py-3.5 rounded-2xl bg-[#5865F2] hover:bg-[#4752c4] text-white font-bold text-sm shadow-[0_0_20px_rgba(88,101,242,0.3)] transition-all transform hover:-translate-y-0.5 active:translate-y-0 shrink-0"

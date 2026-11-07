@@ -25,7 +25,7 @@ export default defineConfig({
         text: '외부 링크',
         items: [
           { text: '공식 웹사이트', link: 'https://mcravi.kr' },
-          { text: '공식 디스코드', link: 'https://discord.com/invite/qeZCRqqbhs' }
+          { text: '공식 디스코드', link: 'https://discord.com/invite/jRkzZZ9kXp' }
         ]
       }
     ],
@@ -110,7 +110,7 @@ export default defineConfig({
     },
 
     socialLinks: [
-      { icon: 'discord', link: 'https://discord.com/invite/qeZCRqqbhs' }
+      { icon: 'discord', link: 'https://discord.com/invite/jRkzZZ9kXp' }
     ],
 
     footer: {

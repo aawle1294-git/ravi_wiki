@@ -166,7 +166,7 @@ export default function OfficialDocDetailPage() {
                 </Link>
 
                 <a
-                  href="https://discord.com/invite/qeZCRqqbhs"
+                  href="https://discord.com/invite/jRkzZZ9kXp"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center justify-center space-x-1.5 w-full py-2 rounded-xl bg-[#5865F2]/10 hover:bg-[#5865F2]/20 border border-[#5865F2]/30 text-[#828cf7] text-xs font-medium transition"
