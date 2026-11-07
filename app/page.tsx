@@ -44,16 +44,15 @@ export default function HomePage() {
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             
             {/* 공식 서버 심볼 엠블럼 로고 */}
-            <div className="flex justify-center mb-6">
+            <div className="flex justify-center mb-8">
               <div className="relative group inline-block">
-                <div className="absolute -inset-2 rounded-3xl bg-gradient-to-r from-amber-500/25 via-indigo-500/30 to-purple-500/25 blur-2xl opacity-75 group-hover:opacity-100 transition duration-700 pointer-events-none" />
-                <div className="relative p-2 rounded-2xl bg-white/[0.04] border border-white/[0.1] backdrop-blur-md shadow-2xl">
-                  <img
-                    src="/logo.png"
-                    alt="라비서버 공식 엠블럼 로고"
-                    className="w-16 h-16 sm:w-20 sm:h-20 object-contain rounded-xl drop-shadow-[0_4px_16px_rgba(245,158,11,0.35)] group-hover:scale-105 transition-transform duration-300"
-                  />
-                </div>
+                {/* 금빛 & 인디고 앰비언트 후광 글로우 */}
+                <div className="absolute -inset-3 rounded-3xl bg-gradient-to-r from-amber-500/20 via-indigo-500/25 to-purple-500/20 blur-2xl opacity-75 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+                <img
+                  src="/logo.png"
+                  alt="라비서버 공식 엠블럼 로고"
+                  className="relative w-28 h-28 sm:w-36 sm:h-36 object-contain rounded-3xl shadow-[0_12px_36px_rgba(0,0,0,0.6)] group-hover:scale-105 transition-transform duration-300"
+                />
               </div>
             </div>
 

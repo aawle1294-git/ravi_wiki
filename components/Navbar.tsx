@@ -73,11 +73,11 @@ export default function Navbar() {
           {/* 좌측: 로고 & 메인 세그먼트 메뉴 */}
           <div className="flex items-center space-x-3 sm:space-x-6 shrink-0">
             <Link href="/" className="flex items-center space-x-2.5 group shrink-0">
-              <div className="relative shrink-0">
+              <div className="relative shrink-0 flex items-center">
                 <img
                   src="/logo.png"
                   alt="라비서버 로고"
-                  className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl object-contain shadow-[0_2px_12px_rgba(245,158,11,0.25)] group-hover:scale-105 group-hover:shadow-[0_2px_18px_rgba(245,158,11,0.4)] transition-all shrink-0 ring-1 ring-white/15"
+                  className="w-9 h-9 sm:w-10 sm:h-10 object-contain rounded-xl drop-shadow-[0_2px_10px_rgba(245,158,11,0.3)] group-hover:scale-105 transition-transform shrink-0"
                 />
               </div>
               <div className="whitespace-nowrap flex flex-col leading-tight">

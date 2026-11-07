@@ -371,6 +371,47 @@ export async function likeFreeDoc(id: string): Promise<{ success: boolean; newLi
 }
 
 /**
+ * ✍️ 자유 위키 게시글 수정 (작성자 또는 개발자)
+ */
+export async function updateFreeDoc(id: string, updates: Partial<Pick<FreeDoc, 'title' | 'category' | 'content'>>): Promise<boolean> {
+  // 1. localStorage 동기화
+  if (typeof window !== 'undefined') {
+    const saved = localStorage.getItem('ravi_free_wiki_docs')
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        const updated = parsed.map((d: FreeDoc) =>
+          d.id === id ? { ...d, ...updates, updatedAt: '방금 전 (수정됨)' } : d
+        )
+        localStorage.setItem('ravi_free_wiki_docs', JSON.stringify(updated))
+      } catch (e) {}
+    }
+  }
+
+  // 2. Supabase DB 동기화
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { error } = await supabase
+        .from('free_docs')
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+      if (error) {
+        console.error('Supabase 게시글 수정 실패:', error.message)
+        return false
+      }
+    } catch (e) {
+      console.error(e)
+      return false
+    }
+  }
+
+  return true
+}
+
+/**
  * 🗑️ 자유 위키 게시글 삭제 (개발자는 전체, 일반 유저는 본인 글)
  */
 export async function deleteFreeDoc(id: string): Promise<boolean> {

@@ -5,9 +5,10 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 import { FreeDoc } from '@/lib/wikiData'
-import { getFreeDocById, getFreeDocComments, addFreeDocComment, deleteFreeDocComment, likeFreeDoc, deleteFreeDoc, hasLikedDoc, isMyDoc, FreeDocComment } from '@/lib/db'
+import { getFreeDocById, getFreeDocComments, addFreeDocComment, deleteFreeDocComment, likeFreeDoc, deleteFreeDoc, updateFreeDoc, hasLikedDoc, isMyDoc, FreeDocComment } from '@/lib/db'
 import { useAuth } from '@/lib/auth'
 import WikiMarkdownRenderer from '@/components/WikiMarkdownRenderer'
+import MarkdownEditor from '@/components/MarkdownEditor'
 import { 
   MessageSquare, 
   ThumbsUp, 
@@ -18,7 +19,10 @@ import {
   ArrowLeft,
   Share2,
   Check,
-  Trash2
+  Trash2,
+  Edit3,
+  Save,
+  X
 } from 'lucide-react'
 
 export default function FreeDocDetailPage() {
@@ -36,6 +40,13 @@ export default function FreeDocDetailPage() {
   const [copied, setCopied] = useState(false)
   const [loading, setLoading] = useState(true)
   const [isDeleting, setIsDeleting] = useState(false)
+
+  // 수정 모드 상태
+  const [isEditing, setIsEditing] = useState(false)
+  const [editTitle, setEditTitle] = useState('')
+  const [editCategory, setEditCategory] = useState('공략/팁')
+  const [editContent, setEditContent] = useState('')
+  const [isSaving, setIsSaving] = useState(false)
 
   useEffect(() => {
     if (user.role === 'player') {
@@ -67,6 +78,37 @@ export default function FreeDocDetailPage() {
       setIsLiked(true)
       setLikes(result.newLikes !== undefined ? result.newLikes : likes + 1)
     }
+  }
+
+  const startEditing = () => {
+    if (!doc) return
+    setEditTitle(doc.title)
+    setEditCategory(doc.category)
+    setEditContent(doc.content)
+    setIsEditing(true)
+  }
+
+  const handleSaveEdit = async () => {
+    if (!doc || !editTitle.trim() || !editContent.trim()) return
+    setIsSaving(true)
+    const ok = await updateFreeDoc(doc.id, {
+      title: editTitle.trim(),
+      category: editCategory,
+      content: editContent.trim()
+    })
+    if (ok) {
+      setDoc({
+        ...doc,
+        title: editTitle.trim(),
+        category: editCategory,
+        content: editContent.trim(),
+        updatedAt: '방금 전 (수정됨)'
+      })
+      setIsEditing(false)
+    } else {
+      alert('수정 중 오류가 발생했습니다.')
+    }
+    setIsSaving(false)
   }
 
   const handleDelete = async () => {
@@ -134,6 +176,7 @@ export default function FreeDocDetailPage() {
   }
 
   const canDelete = isDeveloper || doc.author === user.name || isMyDoc(doc.id)
+  const canEdit = isDeveloper || doc.author === user.name || isMyDoc(doc.id)
 
   return (
     <div className="min-h-screen flex flex-col text-zinc-100">
@@ -141,7 +184,7 @@ export default function FreeDocDetailPage() {
 
       <main className="max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
         
-        {/* 상단 브레드크럼 및 공유/삭제 버튼 */}
+        {/* 상단 브레드크럼 및 공유/수정/삭제 버튼 */}
         <div className="flex items-center justify-between pb-4 border-b border-white/[0.07] mb-6">
           <div className="flex items-center space-x-2 text-xs text-zinc-400">
             <Link href="/" className="hover:text-white transition">홈</Link>
@@ -152,8 +195,19 @@ export default function FreeDocDetailPage() {
           </div>
 
           <div className="flex items-center space-x-2">
+            {/* 수정 버튼: 개발자는 모든 글, 일반 유저는 본인 글만 */}
+            {canEdit && !isEditing && (
+              <button
+                onClick={startEditing}
+                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/25 hover:bg-indigo-500/20 text-indigo-300 text-xs font-medium transition active:scale-95"
+              >
+                <Edit3 className="w-3.5 h-3.5" />
+                <span>수정</span>
+              </button>
+            )}
+
             {/* 삭제 버튼: 개발자는 모든 글, 일반 유저는 본인 글만 */}
-            {canDelete && (
+            {canDelete && !isEditing && (
               <button
                 onClick={handleDelete}
                 disabled={isDeleting}
@@ -176,45 +230,110 @@ export default function FreeDocDetailPage() {
 
         {/* 본문 카드 */}
         <article className="glass-panel p-6 sm:p-9 rounded-3xl shadow-xl mb-8">
-          <div className="flex items-center space-x-2.5 mb-3.5">
-            <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-white/[0.04] border border-white/[0.08] text-zinc-300">
-              {doc.category}
-            </span>
-            <span className="text-xs text-zinc-300 font-medium flex items-center space-x-1">
-              <User className="w-3 h-3 text-indigo-400" />
-              <span>{doc.author}</span>
-            </span>
-            <span className="text-xs text-zinc-500 flex items-center space-x-1">
-              <Clock className="w-3 h-3" />
-              <span>{doc.updatedAt}</span>
-            </span>
-          </div>
+          {isEditing ? (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-white/[0.08]">
+                <h2 className="text-base font-bold text-white flex items-center space-x-2">
+                  <Edit3 className="w-4 h-4 text-indigo-400" />
+                  <span>게시글 수정</span>
+                </h2>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => setIsEditing(false)}
+                    className="flex items-center space-x-1 px-3 py-1.5 rounded-xl bg-white/[0.04] text-zinc-400 hover:bg-white/[0.08] text-xs font-semibold"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                    <span>취소</span>
+                  </button>
+                  <button
+                    onClick={handleSaveEdit}
+                    disabled={isSaving}
+                    className="flex items-center space-x-1.5 px-4 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-xs font-bold shadow-sm transition"
+                  >
+                    <Save className="w-3.5 h-3.5" />
+                    <span>{isSaving ? '저장 중...' : '저장 완료'}</span>
+                  </button>
+                </div>
+              </div>
 
-          <h1 className="text-xl sm:text-2xl font-bold text-white mb-5">
-            {doc.title}
-          </h1>
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                <div className="sm:col-span-1">
+                  <label className="block text-xs font-semibold text-zinc-300 mb-1">카테고리</label>
+                  <select
+                    value={editCategory}
+                    onChange={(e) => setEditCategory(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl bg-[#0e111a] border border-white/[0.1] text-xs text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/60"
+                  >
+                    <option value="공략/팁">공략/팁</option>
+                    <option value="자유위키">자유위키</option>
+                    <option value="질문/답변">질문/답변</option>
+                    <option value="파티모집">파티모집</option>
+                  </select>
+                </div>
+                <div className="sm:col-span-3">
+                  <label className="block text-xs font-semibold text-zinc-300 mb-1">제목</label>
+                  <input
+                    type="text"
+                    value={editTitle}
+                    onChange={(e) => setEditTitle(e.target.value)}
+                    className="w-full px-3.5 py-2 rounded-xl bg-white/[0.04] border border-white/[0.1] text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/60"
+                  />
+                </div>
+              </div>
 
-          <div className="pb-8 border-b border-white/[0.07]">
-            <WikiMarkdownRenderer content={doc.content} />
-          </div>
+              <div>
+                <label className="block text-xs font-semibold text-zinc-300 mb-1">본문 (마크다운 & 글 색상/폰트 지원)</label>
+                <MarkdownEditor
+                  value={editContent}
+                  onChange={setEditContent}
+                  placeholder="내용을 작성하세요..."
+                  minHeight="340px"
+                />
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center space-x-2.5 mb-3.5">
+                <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-white/[0.04] border border-white/[0.08] text-zinc-300">
+                  {doc.category}
+                </span>
+                <span className="text-xs text-zinc-300 font-medium flex items-center space-x-1">
+                  <User className="w-3 h-3 text-indigo-400" />
+                  <span>{doc.author}</span>
+                </span>
+                <span className="text-xs text-zinc-500 flex items-center space-x-1">
+                  <Clock className="w-3 h-3" />
+                  <span>{doc.updatedAt}</span>
+                </span>
+              </div>
 
-          {/* 추천 버튼 */}
-          <div className="pt-6 flex items-center justify-center">
-            <button
-              onClick={handleLike}
-              disabled={isLiked}
-              className={`flex items-center space-x-2 px-6 py-2.5 rounded-full border transition shadow-sm active:scale-95 ${
-                isLiked
-                  ? 'bg-indigo-600/20 border-indigo-500/50 text-indigo-200 cursor-default'
-                  : 'bg-white/[0.03] border-white/[0.08] text-zinc-300 hover:border-white/[0.18] hover:text-white'
-              }`}
-            >
-              <ThumbsUp className="w-4 h-4" />
-              <span className="text-xs font-bold font-mono">
-                {isLiked ? '추천됨' : '추천'} {likes}
-              </span>
-            </button>
-          </div>
+              <h1 className="text-xl sm:text-2xl font-bold text-white mb-5">
+                {doc.title}
+              </h1>
+
+              <div className="pb-8 border-b border-white/[0.07]">
+                <WikiMarkdownRenderer content={doc.content} />
+              </div>
+
+              {/* 추천 버튼 */}
+              <div className="pt-6 flex items-center justify-center">
+                <button
+                  onClick={handleLike}
+                  disabled={isLiked}
+                  className={`flex items-center space-x-2 px-6 py-2.5 rounded-full border transition shadow-sm active:scale-95 ${
+                    isLiked
+                      ? 'bg-indigo-600/20 border-indigo-500/50 text-indigo-200 cursor-default'
+                      : 'bg-white/[0.03] border-white/[0.08] text-zinc-300 hover:border-white/[0.18] hover:text-white'
+                  }`}
+                >
+                  <ThumbsUp className="w-4 h-4" />
+                  <span className="text-xs font-bold font-mono">
+                    {isLiked ? '추천됨' : '추천'} {likes}
+                  </span>
+                </button>
+              </div>
+            </>
+          )}
         </article>
 
         {/* 유저 실시간 댓글 섹션 */}
