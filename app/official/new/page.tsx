@@ -81,7 +81,7 @@ export default function NewOfficialDocPage() {
           <h2 className="text-xl font-bold text-white mb-2">개발자 전용 페이지</h2>
           <p className="text-xs text-zinc-400 mb-6 leading-relaxed">
             공식 문서는 개발자만 추가할 수 있습니다.<br />
-            상단 <strong>[로그인]</strong> ➔ <strong>[개발자 로그인]</strong>에서 암호(<code className="text-indigo-300">ravi23control</code>)를 입력해주세요.
+            상단 <strong>[로그인]</strong> ➔ <strong>[개발자 로그인]</strong>에서 관리자 인증을 완료해주세요.
           </p>
           <Link
             href="/official"

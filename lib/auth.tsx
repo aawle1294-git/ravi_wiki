@@ -12,7 +12,7 @@ export interface UserSession {
 
 interface AuthContextType {
   user: UserSession
-  loginAsDeveloper: (password: string) => boolean
+  loginAsDeveloper: (password: string) => Promise<boolean>
   loginAsPlayer: (nickname: string) => boolean
   logout: () => void
   isDeveloper: boolean
@@ -33,22 +33,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const savedName = localStorage.getItem('ravi_user_name')
 
     if (savedRole === 'developer') {
-      setUser({ role: 'developer', name: savedName || '개발자' })
+      setUser({ role: 'developer', name: savedName || '서버 개발자' })
     } else if (savedRole === 'player' && savedName) {
       setUser({ role: 'player', name: savedName })
     }
   }, [])
 
-  // 🛠️ 개발자 로그인 (암호: ravi23control)
-  const loginAsDeveloper = (password: string): boolean => {
-    if (password === 'ravi23control') {
-      const devSession: UserSession = { role: 'developer', name: '서버 개발자' }
-      setUser(devSession)
-      localStorage.setItem('ravi_user_role', 'developer')
-      localStorage.setItem('ravi_user_name', '서버 개발자')
-      return true
+  // 🛠️ 개발자 로그인 (보안: 클라이언트 번들에 암호를 노출하지 않고 서버 API로 검증)
+  const loginAsDeveloper = async (password: string): Promise<boolean> => {
+    try {
+      const res = await fetch('/api/auth/verify-dev', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        const devSession: UserSession = { role: 'developer', name: '서버 개발자' }
+        setUser(devSession)
+        localStorage.setItem('ravi_user_role', 'developer')
+        localStorage.setItem('ravi_user_name', '서버 개발자')
+        return true
+      }
+      return false
+    } catch {
+      return false
     }
-    return false
   }
 
   // 🎮 플레이어 로그인 (닉네임 입력)
@@ -93,4 +103,3 @@ export function useAuth() {
   }
   return context
 }
-

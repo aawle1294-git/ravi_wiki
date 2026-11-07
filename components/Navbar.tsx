@@ -31,16 +31,20 @@ export default function Navbar() {
   const [playerNickname, setPlayerNickname] = useState('')
   const [errorMsg, setErrorMsg] = useState('')
 
+  const [isVerifying, setIsVerifying] = useState(false)
+
   const copyServerIp = () => {
     navigator.clipboard.writeText('mcravi.m-c.kr')
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const handleDevLogin = (e: React.FormEvent) => {
+  const handleDevLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setErrorMsg('')
-    const success = loginAsDeveloper(devPassword)
+    setIsVerifying(true)
+    const success = await loginAsDeveloper(devPassword)
+    setIsVerifying(false)
     if (success) {
       setShowLoginModal(false)
       setDevPassword('')
@@ -280,7 +284,7 @@ export default function Navbar() {
                     />
                   </div>
                   <p className="text-[11px] text-zinc-400 mt-2 leading-relaxed">
-                    💡 <strong>ravi23control</strong> 입력 시 개발자로 인증되어 공식 위키 문서를 수정할 수 있습니다.
+                    🔒 라비서버 관리자/개발진 전용 인증 암호를 입력하세요.
                   </p>
                 </div>
 
@@ -292,9 +296,10 @@ export default function Navbar() {
 
                 <button
                   type="submit"
-                  className="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-md transition"
+                  disabled={isVerifying}
+                  className="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-xs font-bold shadow-md transition"
                 >
-                  개발자 인증하기
+                  {isVerifying ? '인증 확인 중...' : '개발자 인증하기'}
                 </button>
               </form>
             ) : (

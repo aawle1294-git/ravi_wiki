@@ -273,7 +273,7 @@ export default function HomePage() {
               <span className="text-xl">🔐</span>
               <div>
                 <p className="text-zinc-300 font-medium">
-                  개발자 로그인: 상단 <strong>[로그인]</strong> ➔ <strong>[개발자 로그인]</strong>에서 암호 <code className="text-indigo-300 bg-white/[0.06] px-1.5 py-0.5 rounded border border-white/[0.1] font-mono">ravi23control</code> 입력 시 공식 위키 수정 권한이 부여됩니다.
+                  공식 위키 편집: 서버 개발진은 상단 <strong>[로그인]</strong> ➔ <strong>[개발자 로그인]</strong>에서 전용 암호 인증 후 공식 가이드를 수정할 수 있습니다.
                 </p>
                 <p className="text-zinc-500 mt-1 text-[11px]">
                   일반 플레이어는 닉네임만 입력하면 자유 위키에 글과 댓글을 남길 수 있습니다.
