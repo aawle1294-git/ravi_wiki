@@ -267,15 +267,7 @@ export async function getFreeDocComments(docId: string): Promise<FreeDocComment[
       try { return JSON.parse(saved) } catch (e) {}
     }
   }
-  return [
-    {
-      id: 'c1',
-      docId,
-      author: '라비용사',
-      content: '좋은 정보 감사합니다! 파티 구할 때 도움 많이 되었습니다.',
-      createdAt: '2026-11-07 17:30'
-    }
-  ]
+  return []
 }
 
 /**

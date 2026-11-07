@@ -18,7 +18,7 @@ export interface FreeDoc {
   content: string
 }
 
-// 📘 개발자만 수정 가능한 공식 위키 뼈대 문서
+// 📘 공식 위키 뼈대 문서 (서버 기본 안내 / 규칙 / 명령어 / 시스템 개요)
 export const INITIAL_OFFICIAL_DOCS: OfficialDoc[] = [
   {
     slug: 'getting-started',
@@ -112,33 +112,5 @@ export const INITIAL_OFFICIAL_DOCS: OfficialDoc[] = [
   }
 ]
 
-// ✍️ 플레이어들이 자유롭게 나누고 수정할 수 있는 자유 위키 / 게시판 뼈대 데이터
-export const INITIAL_FREE_DOCS: FreeDoc[] = [
-  {
-    id: 'free-1',
-    title: '뉴비분들을 위한 1~30렙 초고속 사냥터 동선 꿀팁',
-    category: '공략/팁',
-    author: '라비용사',
-    updatedAt: '2026-11-07',
-    likes: 12,
-    content: `1구역에서 슬라임 잡으면서 15렙까지 찍고, 바로 2구역 넘어가기 전에 광산에서 곡괭이부터 3강 하세요! 채광 골드로 기본 물약 사서 가면 훨씬 편합니다.`
-  },
-  {
-    id: 'free-2',
-    title: '주말 저녁 심연의 말고르 레이드 파티원 구합니다 (딜러 환영)',
-    category: '파티모집',
-    author: '대검전사',
-    updatedAt: '2026-11-07',
-    likes: 5,
-    content: `이번 주말 저녁 8시 말고르 레이드 가실 80렙 이상 법사님이나 궁수님 1분 모십니다. 디스코드로 연락주세요!`
-  },
-  {
-    id: 'free-3',
-    title: '에인션트 각성 재료 파밍처 질문드립니다!',
-    category: '질문/답변',
-    author: '초보궁수',
-    updatedAt: '2026-11-07',
-    likes: 3,
-    content: `고대의 핵 모으고 있는데 5구역 드레이크 잡는 게 빠를까요 아니면 레이드 보스 도는 게 빠를까요? 고수님들 답변 부탁드려요.`
-  }
-]
+// ✍️ 자유 위키 / 게시판 (더미 데이터 완전 제거: 유저가 쓴 글만 들어가는 빈 배열)
+export const INITIAL_FREE_DOCS: FreeDoc[] = []
