@@ -32,6 +32,7 @@ export default function FreeWikiPage() {
 
   // 폼 입력 상태
   const [newTitle, setNewTitle] = useState('')
+  const [newSubtitle, setNewSubtitle] = useState('')
   const [newCategory, setNewCategory] = useState('공략/팁')
   const [newAuthor, setNewAuthor] = useState('')
   const [newContent, setNewContent] = useState('')
@@ -91,6 +92,7 @@ export default function FreeWikiPage() {
 
     const created = await saveFreeDoc({
       title: newTitle.trim(),
+      subtitle: newSubtitle.trim() || undefined,
       category: newCategory,
       author: authorName,
       updatedAt: '방금 전',
@@ -100,6 +102,7 @@ export default function FreeWikiPage() {
 
     setDocs(prev => [created, ...prev])
     setNewTitle('')
+    setNewSubtitle('')
     setNewContent('')
     setIsSubmitting(false)
     setShowModal(false)
@@ -217,6 +220,12 @@ export default function FreeWikiPage() {
                       </h3>
                     </Link>
 
+                    {doc.subtitle && (
+                      <p className="text-xs text-indigo-300/90 font-medium line-clamp-1 mb-1">
+                        💡 {doc.subtitle}
+                      </p>
+                    )}
+
                     <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed line-clamp-2">
                       {doc.content.replace(/<[^>]+>/g, '').replace(/#+\s|[*_`>-]\s?|\n/g, ' ').trim()}
                     </p>
@@ -328,6 +337,17 @@ export default function FreeWikiPage() {
                   onChange={(e) => setNewTitle(e.target.value)}
                   required
                   className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.1] text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/60"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-zinc-300 mb-1">부제목 / 한 줄 요약 (선택)</label>
+                <input
+                  type="text"
+                  placeholder="목록 카드 및 상단에 표시될 부제목 / 핵심 요약 (선택 사항)"
+                  value={newSubtitle}
+                  onChange={(e) => setNewSubtitle(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.1] text-xs text-zinc-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/60"
                 />
               </div>
 

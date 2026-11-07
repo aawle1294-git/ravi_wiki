@@ -28,7 +28,7 @@ export async function getOfficialDocs(): Promise<OfficialDoc[]> {
           category: d.category,
           icon: d.icon || '📜',
           description: d.description || '',
-          content: d.content,
+          content: (d.content || '').replace(/\\n/g, '\n').replace(/\\r/g, ''),
           updatedAt: d.updated_at ? new Date(d.updated_at).toISOString().split('T')[0] : '2026-11-07'
         }))
       }
@@ -85,7 +85,7 @@ export async function getOfficialDocBySlug(slug: string): Promise<OfficialDoc | 
           category: data.category,
           icon: data.icon || '📜',
           description: data.description || '',
-          content: data.content,
+          content: (data.content || '').replace(/\\n/g, '\n').replace(/\\r/g, ''),
           updatedAt: data.updated_at ? new Date(data.updated_at).toISOString().split('T')[0] : '2026-11-07'
         }
       }
@@ -137,6 +137,28 @@ export async function saveOfficialDoc(doc: OfficialDoc): Promise<boolean> {
     } catch (e) {
       console.error(e)
       return false
+    }
+  }
+
+  return true
+}
+
+/**
+ * 📘 공식 위키 문서 삭제 (개발자 전용)
+ */
+export async function deleteOfficialDoc(slug: string): Promise<boolean> {
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem(`ravi_official_${slug}`)
+    const customList = JSON.parse(localStorage.getItem('ravi_official_custom_slugs') || '[]')
+    const updated = customList.filter((s: string) => s !== slug)
+    localStorage.setItem('ravi_official_custom_slugs', JSON.stringify(updated))
+  }
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      await supabase.from('official_docs').delete().eq('slug', slug)
+    } catch (e) {
+      console.error('Supabase 공식 문서 삭제 오류:', e)
     }
   }
 
@@ -207,15 +229,25 @@ export async function getFreeDocs(): Promise<FreeDoc[]> {
       if (!error && data && data.length > 0) {
         return data
           .filter((d: any) => d.category !== '__DELETED__' && !deletedIds.includes(d.id))
-          .map((d: any) => ({
-            id: d.id,
-            title: d.title,
-            category: d.category,
-            author: d.author,
-            content: d.content,
-            likes: d.likes || 1,
-            updatedAt: d.created_at ? new Date(d.created_at).toLocaleString('ko-KR') : '방금 전'
-          }))
+          .map((d: any) => {
+            let parsedSubtitle = d.subtitle || undefined
+            let cleanContent = (d.content || '').replace(/\\n/g, '\n').replace(/\\r/g, '')
+            const subMatch = cleanContent.match(/^<!--subtitle:(.*?)-->\s*\n?/)
+            if (subMatch) {
+              parsedSubtitle = subMatch[1]
+              cleanContent = cleanContent.replace(/^<!--subtitle:(.*?)-->\s*\n?/, '')
+            }
+            return {
+              id: d.id,
+              title: d.title,
+              subtitle: parsedSubtitle,
+              category: d.category,
+              author: d.author,
+              content: cleanContent,
+              likes: d.likes || 1,
+              updatedAt: d.created_at ? new Date(d.created_at).toLocaleString('ko-KR') : '방금 전'
+            }
+          })
       }
     } catch (e) {}
   }
@@ -262,13 +294,17 @@ export async function saveFreeDoc(doc: Omit<FreeDoc, 'id'>): Promise<FreeDoc> {
 
   if (isSupabaseConfigured && supabase) {
     try {
+      const enrichedContent = doc.subtitle
+        ? `<!--subtitle:${doc.subtitle}-->\n${doc.content}`
+        : doc.content
+
       const { data, error } = await supabase
         .from('free_docs')
         .insert({
           title: doc.title,
           category: doc.category,
           author: doc.author,
-          content: doc.content,
+          content: enrichedContent,
           likes: doc.likes || 1
         })
         .select()
@@ -279,9 +315,10 @@ export async function saveFreeDoc(doc: Omit<FreeDoc, 'id'>): Promise<FreeDoc> {
         return {
           id: data.id,
           title: data.title,
+          subtitle: doc.subtitle,
           category: data.category,
           author: data.author,
-          content: data.content,
+          content: doc.content,
           likes: data.likes,
           updatedAt: new Date(data.created_at).toLocaleString('ko-KR')
         }
@@ -373,7 +410,7 @@ export async function likeFreeDoc(id: string): Promise<{ success: boolean; newLi
 /**
  * ✍️ 자유 위키 게시글 수정 (작성자 또는 개발자)
  */
-export async function updateFreeDoc(id: string, updates: Partial<Pick<FreeDoc, 'title' | 'category' | 'content'>>): Promise<boolean> {
+export async function updateFreeDoc(id: string, updates: Partial<Pick<FreeDoc, 'title' | 'subtitle' | 'category' | 'content'>>): Promise<boolean> {
   // 1. localStorage 동기화
   if (typeof window !== 'undefined') {
     const saved = localStorage.getItem('ravi_free_wiki_docs')
@@ -391,12 +428,21 @@ export async function updateFreeDoc(id: string, updates: Partial<Pick<FreeDoc, '
   // 2. Supabase DB 동기화
   if (isSupabaseConfigured && supabase) {
     try {
+      const dbUpdates: any = {}
+      if (updates.title !== undefined) dbUpdates.title = updates.title
+      if (updates.category !== undefined) dbUpdates.category = updates.category
+
+      if (updates.content !== undefined || updates.subtitle !== undefined) {
+        const baseContent = updates.content !== undefined ? updates.content : ''
+        const subtitle = updates.subtitle
+        dbUpdates.content = subtitle ? `<!--subtitle:${subtitle}-->\n${baseContent}` : baseContent
+      }
+
+      dbUpdates.updated_at = new Date().toISOString()
+
       const { error } = await supabase
         .from('free_docs')
-        .update({
-          ...updates,
-          updated_at: new Date().toISOString()
-        })
+        .update(dbUpdates)
         .eq('id', id)
       if (error) {
         console.error('Supabase 게시글 수정 실패:', error.message)

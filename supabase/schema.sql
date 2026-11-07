@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS public.official_docs (
 CREATE TABLE IF NOT EXISTS public.free_docs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     title TEXT NOT NULL,
+    subtitle TEXT,
     category TEXT NOT NULL DEFAULT '공략/팁',
     author TEXT NOT NULL DEFAULT '라비 유저',
     content TEXT NOT NULL,
@@ -25,6 +26,9 @@ CREATE TABLE IF NOT EXISTS public.free_docs (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
+
+-- 기존 free_docs 테이블이 이미 생성되어 있을 경우를 위한 안전 컬럼 추가문
+ALTER TABLE public.free_docs ADD COLUMN IF NOT EXISTS subtitle TEXT;
 
 -- 초기 공식 문서 시드 데이터 삽입 (기존 데이터가 없을 경우에만)
 INSERT INTO public.official_docs (slug, title, category, icon, description, content)

@@ -7,7 +7,7 @@ import Navbar from '@/components/Navbar'
 import WikiMarkdownRenderer from '@/components/WikiMarkdownRenderer'
 import MarkdownEditor from '@/components/MarkdownEditor'
 import { OfficialDoc } from '@/lib/wikiData'
-import { getOfficialDocBySlug, getOfficialDocs, saveOfficialDoc } from '@/lib/db'
+import { getOfficialDocBySlug, getOfficialDocs, saveOfficialDoc, deleteOfficialDoc } from '@/lib/db'
 import { useAuth } from '@/lib/auth'
 import { 
   BookOpen, 
@@ -18,11 +18,14 @@ import {
   X, 
   ChevronRight, 
   Clock, 
-  CheckCircle2
+  CheckCircle2,
+  Trash2
 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 export default function OfficialDocDetailPage() {
   const params = useParams()
+  const router = useRouter()
   const slug = (params?.slug as string) || 'getting-started'
   const { isDeveloper } = useAuth()
 
@@ -30,16 +33,20 @@ export default function OfficialDocDetailPage() {
   const [allDocs, setAllDocs] = useState<OfficialDoc[]>([])
   const [isEditing, setIsEditing] = useState(false)
   const [editTitle, setEditTitle] = useState('')
+  const [editDescription, setEditDescription] = useState('')
   const [editContent, setEditContent] = useState('')
   const [saveSuccess, setSaveSuccess] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   useEffect(() => {
     getOfficialDocBySlug(slug).then(d => {
       if (d) {
-        setDoc(d)
+        const cleanContent = (d.content || '').replace(/\\n/g, '\n').replace(/\\r/g, '')
+        setDoc({ ...d, content: cleanContent })
         setEditTitle(d.title)
-        setEditContent((d.content || '').replace(/\\n/g, '\n').replace(/\\r/g, ''))
+        setEditDescription(d.description || '')
+        setEditContent(cleanContent)
       }
     })
 
@@ -47,6 +54,21 @@ export default function OfficialDocDetailPage() {
       setAllDocs(list)
     })
   }, [slug])
+
+  const handleDelete = async () => {
+    if (!doc || !isDeveloper) return
+    if (!confirm(`'${doc.title}' 공식 문서를 정말로 삭제하시겠습니까?\n삭제된 문서는 복구할 수 없습니다.`)) return
+
+    setIsDeleting(true)
+    const success = await deleteOfficialDoc(slug)
+    if (success) {
+      alert('공식 문서가 성공적으로 삭제되었습니다.')
+      router.push('/official')
+    } else {
+      alert('삭제 중 오류가 발생했습니다.')
+      setIsDeleting(false)
+    }
+  }
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -56,6 +78,7 @@ export default function OfficialDocDetailPage() {
     const updated: OfficialDoc = {
       ...doc,
       title: editTitle.trim(),
+      description: editDescription.trim(),
       content: editContent.trim(),
       updatedAt: new Date().toISOString().split('T')[0]
     }
@@ -105,13 +128,24 @@ export default function OfficialDocDetailPage() {
                   <span>개발자 권한</span>
                 </span>
                 {!isEditing && (
-                  <button
-                    onClick={() => setIsEditing(true)}
-                    className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-sm transition"
-                  >
-                    <Edit3 className="w-3.5 h-3.5" />
-                    <span>문서 편집</span>
-                  </button>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => setIsEditing(true)}
+                      className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-sm transition active:scale-95"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                      <span>문서 편집</span>
+                    </button>
+                    <button
+                      onClick={handleDelete}
+                      disabled={isDeleting}
+                      className="flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-rose-950/30 border border-rose-500/30 hover:bg-rose-950/50 hover:border-rose-500/60 text-rose-300 text-xs font-semibold transition active:scale-95 disabled:opacity-50"
+                      title="공식 문서 영구 삭제"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>{isDeleting ? '삭제 중...' : '문서 삭제'}</span>
+                    </button>
+                  </div>
                 )}
               </div>
             ) : (
@@ -209,6 +243,17 @@ export default function OfficialDocDetailPage() {
                 </div>
 
                 <div>
+                  <label className="block text-xs font-semibold text-zinc-300 mb-1">부제목 / 한 줄 설명</label>
+                  <input
+                    type="text"
+                    value={editDescription}
+                    onChange={(e) => setEditDescription(e.target.value)}
+                    placeholder="목록 카드 및 상단에 표시될 부제목 / 핵심 요약"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.1] text-zinc-200 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/60"
+                  />
+                </div>
+
+                <div>
                   <label className="block text-xs font-semibold text-zinc-300 mb-2">
                     문서 본문 (마크다운 편집기 & 실시간 미리보기)
                   </label>
@@ -261,6 +306,15 @@ export default function OfficialDocDetailPage() {
                     {doc.category}
                   </span>
                 </div>
+
+                {/* 부제목 / 한 줄 설명 (설정된 경우) */}
+                {doc.description && (
+                  <div className="mb-6 pb-4 border-b border-white/[0.06]">
+                    <p className="text-xs sm:text-sm text-indigo-300/90 font-medium leading-relaxed bg-indigo-500/10 border-l-2 border-indigo-500/60 px-3.5 py-2 rounded-r-xl">
+                      💡 {doc.description}
+                    </p>
+                  </div>
+                )}
 
                 {/* 마크다운 렌더링 */}
                 <WikiMarkdownRenderer content={doc.content} />

@@ -44,6 +44,7 @@ export default function FreeDocDetailPage() {
   // 수정 모드 상태
   const [isEditing, setIsEditing] = useState(false)
   const [editTitle, setEditTitle] = useState('')
+  const [editSubtitle, setEditSubtitle] = useState('')
   const [editCategory, setEditCategory] = useState('공략/팁')
   const [editContent, setEditContent] = useState('')
   const [isSaving, setIsSaving] = useState(false)
@@ -83,6 +84,7 @@ export default function FreeDocDetailPage() {
   const startEditing = () => {
     if (!doc) return
     setEditTitle(doc.title)
+    setEditSubtitle(doc.subtitle || '')
     setEditCategory(doc.category)
     setEditContent(doc.content)
     setIsEditing(true)
@@ -93,6 +95,7 @@ export default function FreeDocDetailPage() {
     setIsSaving(true)
     const ok = await updateFreeDoc(doc.id, {
       title: editTitle.trim(),
+      subtitle: editSubtitle.trim() || undefined,
       category: editCategory,
       content: editContent.trim()
     })
@@ -100,6 +103,7 @@ export default function FreeDocDetailPage() {
       setDoc({
         ...doc,
         title: editTitle.trim(),
+        subtitle: editSubtitle.trim() || undefined,
         category: editCategory,
         content: editContent.trim(),
         updatedAt: '방금 전 (수정됨)'
@@ -282,6 +286,17 @@ export default function FreeDocDetailPage() {
               </div>
 
               <div>
+                <label className="block text-xs font-semibold text-zinc-300 mb-1">부제목 / 한 줄 설명 (선택)</label>
+                <input
+                  type="text"
+                  value={editSubtitle}
+                  onChange={(e) => setEditSubtitle(e.target.value)}
+                  placeholder="게시글 핵심 요약 또는 부제목"
+                  className="w-full px-3.5 py-2 rounded-xl bg-white/[0.04] border border-white/[0.1] text-xs text-zinc-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/60"
+                />
+              </div>
+
+              <div>
                 <label className="block text-xs font-semibold text-zinc-300 mb-1">본문 (마크다운 & 글 색상/폰트 지원)</label>
                 <MarkdownEditor
                   value={editContent}
@@ -307,9 +322,17 @@ export default function FreeDocDetailPage() {
                 </span>
               </div>
 
-              <h1 className="text-xl sm:text-2xl font-bold text-white mb-5">
+              <h1 className="text-xl sm:text-2xl font-bold text-white mb-3">
                 {doc.title}
               </h1>
+
+              {doc.subtitle && (
+                <div className="mb-6">
+                  <p className="text-xs sm:text-sm text-indigo-300/90 font-medium leading-relaxed bg-indigo-500/10 border-l-2 border-indigo-500/60 px-3.5 py-2 rounded-r-xl">
+                    💡 {doc.subtitle}
+                  </p>
+                </div>
+              )}
 
               <div className="pb-8 border-b border-white/[0.07]">
                 <WikiMarkdownRenderer content={doc.content} />

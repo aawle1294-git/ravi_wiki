@@ -1,9 +1,10 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 import { INITIAL_OFFICIAL_DOCS } from '@/lib/wikiData'
+import { useAuth } from '@/lib/auth'
 import { 
   Sword, 
   Copy, 
@@ -17,11 +18,39 @@ import {
   Layers,
   Flame,
   Radio,
-  ChevronRight
+  ChevronRight,
+  Edit3,
+  Save,
+  X
 } from 'lucide-react'
 
 export default function HomePage() {
+  const { isDeveloper } = useAuth()
   const [copied, setCopied] = useState(false)
+
+  // 메인 부제목 설정 상태
+  const [subtitle, setSubtitle] = useState('진화하는 마인크래프트 RPG, 라비서버의 모든 것.\n개발진 공식 시스템 가이드와 유저 참여형 자유 게시판을 한곳에서 만나보세요.')
+  const [isEditingSubtitle, setIsEditingSubtitle] = useState(false)
+  const [tempSubtitle, setTempSubtitle] = useState('')
+
+  useEffect(() => {
+    const saved = localStorage.getItem('ravi_site_subtitle')
+    if (saved) {
+      setSubtitle(saved)
+    }
+  }, [])
+
+  const startEditSubtitle = () => {
+    setTempSubtitle(subtitle)
+    setIsEditingSubtitle(true)
+  }
+
+  const saveSubtitle = () => {
+    if (!tempSubtitle.trim()) return
+    setSubtitle(tempSubtitle.trim())
+    localStorage.setItem('ravi_site_subtitle', tempSubtitle.trim())
+    setIsEditingSubtitle(false)
+  }
 
   const copyServerIp = () => {
     navigator.clipboard.writeText('mcravi.m-c.kr')
@@ -72,11 +101,56 @@ export default function HomePage() {
               </span>
             </h1>
             
-            {/* 서브 카피 */}
-            <p className="text-sm sm:text-base text-zinc-400 max-w-xl mx-auto leading-relaxed mb-9">
-              진화하는 마인크래프트 RPG, 라비서버의 모든 것.<br className="hidden sm:inline" />
-              개발진 공식 시스템 가이드와 유저 참여형 자유 게시판을 한곳에서 만나보세요.
-            </p>
+            {/* 서브 카피 (부제목) - 개발자 인라인 설정 지원 */}
+            {isEditingSubtitle ? (
+              <div className="max-w-xl mx-auto mb-9 p-4 rounded-2xl bg-black/60 border border-white/[0.15] shadow-xl text-left">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-semibold text-indigo-300 flex items-center space-x-1">
+                    <Edit3 className="w-3.5 h-3.5" />
+                    <span>홈 부제목 설정</span>
+                  </span>
+                  <div className="flex items-center space-x-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setIsEditingSubtitle(false)}
+                      className="px-2.5 py-1 rounded-lg bg-white/[0.05] hover:bg-white/[0.1] text-zinc-400 text-xs font-medium"
+                    >
+                      취소
+                    </button>
+                    <button
+                      type="button"
+                      onClick={saveSubtitle}
+                      className="flex items-center space-x-1 px-3 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-sm"
+                    >
+                      <Save className="w-3 h-3" />
+                      <span>저장</span>
+                    </button>
+                  </div>
+                </div>
+                <textarea
+                  value={tempSubtitle}
+                  onChange={(e) => setTempSubtitle(e.target.value)}
+                  rows={2}
+                  className="w-full p-2.5 rounded-xl bg-white/[0.04] border border-white/[0.1] text-xs sm:text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-indigo-500 resize-none leading-relaxed"
+                />
+              </div>
+            ) : (
+              <div className="relative group/subtitle inline-block max-w-xl mx-auto mb-9">
+                <p className="text-sm sm:text-base text-zinc-400 leading-relaxed whitespace-pre-wrap">
+                  {subtitle}
+                </p>
+                {isDeveloper && (
+                  <button
+                    type="button"
+                    onClick={startEditSubtitle}
+                    className="opacity-60 hover:opacity-100 transition-opacity absolute -right-9 top-1/2 -translate-y-1/2 p-1.5 rounded-lg bg-indigo-500/15 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-500/30 shadow-sm"
+                    title="홈 부제목 수정 (개발자 전용)"
+                  >
+                    <Edit3 className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+            )}
 
             {/* 핵심 CTA 버튼 그룹: IP 원클릭 복사 & 공식 디스코드 */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-md mx-auto">

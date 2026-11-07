@@ -11,6 +11,7 @@ export interface OfficialDoc {
 export interface FreeDoc {
   id: string
   title: string
+  subtitle?: string
   category: string
   author: string
   updatedAt: string
