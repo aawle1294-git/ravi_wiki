@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 import { FreeDoc } from '@/lib/wikiData'
-import { getFreeDocById, getFreeDocComments, addFreeDocComment, likeFreeDoc, deleteFreeDoc, hasLikedDoc, isMyDoc, FreeDocComment } from '@/lib/db'
+import { getFreeDocById, getFreeDocComments, addFreeDocComment, deleteFreeDocComment, likeFreeDoc, deleteFreeDoc, hasLikedDoc, isMyDoc, FreeDocComment } from '@/lib/db'
 import { useAuth } from '@/lib/auth'
 import WikiMarkdownRenderer from '@/components/WikiMarkdownRenderer'
 import { 
@@ -90,6 +90,12 @@ export default function FreeDocDetailPage() {
     const added = await addFreeDocComment(id, finalAuthor, newComment.trim())
     setComments(prev => [added, ...prev])
     setNewComment('')
+  }
+
+  const handleDeleteComment = async (commentId: string) => {
+    if (!confirm('댓글을 삭제하시겠습니까?')) return
+    await deleteFreeDocComment(id, commentId)
+    setComments(prev => prev.filter(c => c.id !== commentId))
   }
 
   const handleShare = () => {
@@ -262,10 +268,23 @@ export default function FreeDocDetailPage() {
           {/* 댓글 목록 */}
           <div className="space-y-2.5">
             {comments.map(c => (
-              <div key={c.id} className="p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.05]">
-                <div className="flex items-center space-x-2 mb-1 text-xs">
-                  <span className="font-semibold text-indigo-300">🎮 {c.author}</span>
-                  <span className="text-[11px] text-zinc-500">• {c.createdAt}</span>
+              <div key={c.id} className="p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.05] group/comment">
+                <div className="flex items-center justify-between mb-1 text-xs">
+                  <div className="flex items-center space-x-2">
+                    <span className="font-semibold text-indigo-300">🎮 {c.author}</span>
+                    <span className="text-[11px] text-zinc-500">• {c.createdAt}</span>
+                  </div>
+
+                  {(isDeveloper || c.author === user.name) && (
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteComment(c.id)}
+                      className="opacity-0 group-hover/comment:opacity-100 text-zinc-500 hover:text-rose-400 p-1 rounded transition"
+                      title="댓글 삭제"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  )}
                 </div>
                 <p className="text-xs text-zinc-300 leading-relaxed whitespace-pre-wrap">{c.content}</p>
               </div>

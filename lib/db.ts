@@ -448,3 +448,16 @@ export async function addFreeDocComment(docId: string, author: string, content: 
 
   return newComment
 }
+
+/**
+ * 💬 자유 위키 댓글 삭제 (개발자 또는 본인)
+ */
+export async function deleteFreeDocComment(docId: string, commentId: string): Promise<boolean> {
+  if (typeof window !== 'undefined') {
+    const current = await getFreeDocComments(docId)
+    const updated = current.filter(c => c.id !== commentId)
+    localStorage.setItem(`ravi_free_comments_${docId}`, JSON.stringify(updated))
+    return true
+  }
+  return false
+}
