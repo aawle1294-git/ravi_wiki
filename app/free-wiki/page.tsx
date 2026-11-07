@@ -211,8 +211,8 @@ export default function FreeWikiPage() {
                       </h3>
                     </Link>
 
-                    <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed whitespace-pre-wrap line-clamp-2">
-                      {doc.content}
+                    <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed line-clamp-2">
+                      {doc.content.replace(/<[^>]+>/g, '').replace(/#+\s|[*_`>-]\s?|\n/g, ' ').trim()}
                     </p>
                   </div>
 
