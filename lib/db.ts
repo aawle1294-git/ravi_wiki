@@ -237,11 +237,13 @@ export async function getFreeDocs(): Promise<FreeDoc[]> {
               parsedSubtitle = subMatch[1]
               cleanContent = cleanContent.replace(/^<!--subtitle:(.*?)-->\s*\n?/, '')
             }
+            const isWiki = d.docType === 'wiki' || d.category === '자유위키'
             return {
               id: d.id,
               title: d.title,
               subtitle: parsedSubtitle,
               category: d.category,
+              docType: isWiki ? 'wiki' : 'post',
               author: d.author,
               content: cleanContent,
               likes: d.likes || 1,
@@ -278,9 +280,11 @@ export async function getFreeDocById(id: string): Promise<FreeDoc | null> {
  */
 export async function saveFreeDoc(doc: Omit<FreeDoc, 'id'>): Promise<FreeDoc> {
   const newId = Date.now().toString()
+  const isWiki = doc.docType === 'wiki' || doc.category === '자유위키'
   const completeDoc: FreeDoc = {
     ...doc,
-    id: newId
+    id: newId,
+    docType: isWiki ? 'wiki' : 'post'
   }
 
   // 작성자 소유 ID 기록
@@ -547,4 +551,145 @@ export async function deleteFreeDocComment(docId: string, commentId: string): Pr
     return true
   }
   return false
+}
+
+export interface Report {
+  id: string
+  targetId: string
+  targetType: 'wiki' | 'post' | 'comment'
+  targetTitle: string
+  reason: string
+  details: string
+  reporter: string
+  status: 'pending' | 'resolved' | 'dismissed'
+  createdAt: string
+}
+
+/**
+ * 🚨 신고 접수
+ */
+export async function createReport(data: {
+  targetId: string
+  targetType: 'wiki' | 'post' | 'comment'
+  targetTitle: string
+  reason: string
+  details?: string
+  reporter?: string
+}): Promise<Report> {
+  const newReport: Report = {
+    id: 'rep_' + Date.now().toString(),
+    targetId: data.targetId,
+    targetType: data.targetType,
+    targetTitle: data.targetTitle,
+    reason: data.reason,
+    details: data.details || '',
+    reporter: data.reporter || '익명 유저',
+    status: 'pending',
+    createdAt: new Date().toLocaleString('ko-KR')
+  }
+
+  if (typeof window !== 'undefined') {
+    const list = await getReports()
+    const updated = [newReport, ...list]
+    localStorage.setItem('ravi_reports', JSON.stringify(updated))
+  }
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      await supabase.from('reports').insert({
+        target_id: data.targetId,
+        target_type: data.targetType,
+        target_title: data.targetTitle,
+        reason: data.reason,
+        details: data.details || '',
+        reporter: data.reporter || '익명 유저',
+        status: 'pending'
+      })
+    } catch (e) {}
+  }
+
+  return newReport
+}
+
+/**
+ * 🚨 전체 신고 목록 조회 (관리자용)
+ */
+export async function getReports(): Promise<Report[]> {
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('reports')
+        .select('*')
+        .order('created_at', { ascending: false })
+
+      if (!error && data && data.length > 0) {
+        return data.map((d: any) => ({
+          id: d.id,
+          targetId: d.target_id,
+          targetType: d.target_type,
+          targetTitle: d.target_title,
+          reason: d.reason,
+          details: d.details || '',
+          reporter: d.reporter || '익명 유저',
+          status: d.status || 'pending',
+          createdAt: d.created_at ? new Date(d.created_at).toLocaleString('ko-KR') : '방금 전'
+        }))
+      }
+    } catch (e) {}
+  }
+
+  if (typeof window !== 'undefined') {
+    const saved = localStorage.getItem('ravi_reports')
+    if (saved) {
+      try {
+        return JSON.parse(saved)
+      } catch (e) {}
+    }
+  }
+
+  return []
+}
+
+/**
+ * 🚨 신고 상태 변경 (처리완료, 기각 등)
+ */
+export async function updateReportStatus(reportId: string, status: 'pending' | 'resolved' | 'dismissed'): Promise<boolean> {
+  if (typeof window !== 'undefined') {
+    const current = await getReports()
+    const updated = current.map(r => r.id === reportId ? { ...r, status } : r)
+    localStorage.setItem('ravi_reports', JSON.stringify(updated))
+  }
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      await supabase
+        .from('reports')
+        .update({ status })
+        .eq('id', reportId)
+    } catch (e) {}
+  }
+
+  return true
+}
+
+/**
+ * 🚨 신고 내역 삭제
+ */
+export async function deleteReport(reportId: string): Promise<boolean> {
+  if (typeof window !== 'undefined') {
+    const current = await getReports()
+    const updated = current.filter(r => r.id !== reportId)
+    localStorage.setItem('ravi_reports', JSON.stringify(updated))
+  }
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      await supabase
+        .from('reports')
+        .delete()
+        .eq('id', reportId)
+    } catch (e) {}
+  }
+
+  return true
 }

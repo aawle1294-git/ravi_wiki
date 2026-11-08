@@ -74,3 +74,22 @@ CREATE POLICY "Allow public delete official_docs" ON public.official_docs FOR DE
 CREATE POLICY "Allow public write free_docs" ON public.free_docs FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow public update free_docs" ON public.free_docs FOR UPDATE USING (true);
 CREATE POLICY "Allow public delete free_docs" ON public.free_docs FOR DELETE USING (true);
+
+-- 3. 🚨 신고 (Reports) 테이블 (관리자 전용 조회/조치)
+CREATE TABLE IF NOT EXISTS public.reports (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    target_id TEXT NOT NULL,
+    target_type TEXT NOT NULL DEFAULT 'wiki',
+    target_title TEXT NOT NULL,
+    reason TEXT NOT NULL,
+    details TEXT,
+    reporter TEXT NOT NULL DEFAULT '익명 유저',
+    status TEXT NOT NULL DEFAULT 'pending',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+ALTER TABLE public.reports ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow public insert reports" ON public.reports FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public select reports" ON public.reports FOR SELECT USING (true);
+CREATE POLICY "Allow public update reports" ON public.reports FOR UPDATE USING (true);
+CREATE POLICY "Allow public delete reports" ON public.reports FOR DELETE USING (true);

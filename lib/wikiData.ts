@@ -13,10 +13,12 @@ export interface FreeDoc {
   title: string
   subtitle?: string
   category: string
+  docType?: 'wiki' | 'post'
   author: string
   updatedAt: string
   likes: number
   content: string
+  views?: number
 }
 
 // 📘 공식 위키 뼈대 문서 (서버 기본 안내 / 규칙 / 명령어 / 시스템 개요)

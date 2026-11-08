@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { 
@@ -16,11 +16,15 @@ import {
   BookOpen,
   MessageSquare,
   Sun,
-  Moon
+  Moon,
+  ShieldAlert,
+  FileText
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth'
 import { useTheme } from '@/lib/theme'
+import { getReports } from '@/lib/db'
 import ServerStatusBadge from './ServerStatusBadge'
+import AdminReportsModal from './AdminReportsModal'
 
 export default function Navbar() {
   const pathname = usePathname()
@@ -29,12 +33,29 @@ export default function Navbar() {
   
   const [copied, setCopied] = useState(false)
   const [showLoginModal, setShowLoginModal] = useState(false)
+  const [showReportsModal, setShowReportsModal] = useState(false)
+  const [pendingReportsCount, setPendingReportsCount] = useState(0)
   const [loginTab, setLoginTab] = useState<'developer' | 'player'>('developer')
   const [devPassword, setDevPassword] = useState('')
   const [playerNickname, setPlayerNickname] = useState('')
   const [errorMsg, setErrorMsg] = useState('')
-
   const [isVerifying, setIsVerifying] = useState(false)
+
+  const loadPendingReports = async () => {
+    try {
+      const reports = await getReports()
+      const pending = reports.filter(r => r.status === 'pending').length
+      setPendingReportsCount(pending)
+    } catch (e) {}
+  }
+
+  useEffect(() => {
+    if (user.role === 'developer') {
+      loadPendingReports()
+      const interval = setInterval(loadPendingReports, 15000)
+      return () => clearInterval(interval)
+    }
+  }, [user.role])
 
   const copyServerIp = () => {
     navigator.clipboard.writeText('mcravi.m-c.kr')
@@ -99,7 +120,7 @@ export default function Navbar() {
               </div>
             </Link>
 
-            {/* 메인 2대 탭: 모던 세그먼트 버튼 */}
+            {/* 메인 3대 탭: 모던 세그먼트 버튼 */}
             <nav className="hidden md:flex items-center space-x-1 p-1 rounded-xl bg-white/[0.03] border border-white/[0.06] text-xs font-semibold whitespace-nowrap shrink-0">
               <Link
                 href="/official"
@@ -114,12 +135,20 @@ export default function Navbar() {
               </Link>
 
               <Link
-                href="/free-wiki"
+                href="/free-wiki#wiki"
                 className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg transition-all shrink-0 ${
                   pathname.startsWith('/free-wiki')
                     ? 'bg-white/[0.08] text-white shadow-sm border border-white/[0.1]'
                     : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.03]'
                 }`}
+              >
+                <FileText className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                <span className="whitespace-nowrap">자유 위키</span>
+              </Link>
+
+              <Link
+                href="/free-wiki#board"
+                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg transition-all shrink-0 text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.03]"
               >
                 <MessageSquare className="w-3.5 h-3.5 text-violet-400 shrink-0" />
                 <span className="whitespace-nowrap">자유 게시판</span>
@@ -177,16 +206,34 @@ export default function Navbar() {
 
             {/* 로그인 / 사용자 상태 */}
             {user.role === 'developer' ? (
-              <div className="flex items-center space-x-1.5 bg-indigo-500/15 border border-indigo-500/30 px-2.5 py-1.5 rounded-full text-xs font-semibold text-indigo-200 whitespace-nowrap shrink-0">
-                <ShieldCheck className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
-                <span className="whitespace-nowrap text-[11px]">개발자</span>
+              <div className="flex items-center space-x-1.5">
+                {/* 관리자 전용 신고 보관함 버튼 */}
                 <button
-                  onClick={logout}
-                  className="ml-1 text-zinc-400 hover:text-rose-400 transition"
-                  title="로그아웃"
+                  type="button"
+                  onClick={() => setShowReportsModal(true)}
+                  className="flex items-center space-x-1 bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 px-2.5 py-1.5 rounded-full text-xs font-semibold text-rose-300 transition active:scale-95 shrink-0"
+                  title="관리자 신고 보관함"
                 >
-                  <LogOut className="w-3.5 h-3.5 shrink-0" />
+                  <ShieldAlert className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                  <span className="whitespace-nowrap text-[11px]">신고</span>
+                  {pendingReportsCount > 0 && (
+                    <span className="px-1.5 py-0.2 rounded-full bg-rose-600 text-white text-[10px] font-mono font-bold animate-pulse">
+                      {pendingReportsCount}
+                    </span>
+                  )}
                 </button>
+
+                <div className="flex items-center space-x-1.5 bg-indigo-500/15 border border-indigo-500/30 px-2.5 py-1.5 rounded-full text-xs font-semibold text-indigo-200 whitespace-nowrap shrink-0">
+                  <ShieldCheck className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                  <span className="whitespace-nowrap text-[11px]">개발자</span>
+                  <button
+                    onClick={logout}
+                    className="ml-1 text-zinc-400 hover:text-rose-400 transition"
+                    title="로그아웃"
+                  >
+                    <LogOut className="w-3.5 h-3.5 shrink-0" />
+                  </button>
+                </div>
               </div>
             ) : user.role === 'player' ? (
               <div className="flex items-center space-x-1.5 bg-white/[0.04] border border-white/[0.08] px-2.5 py-1.5 rounded-full text-xs font-semibold text-zinc-200 whitespace-nowrap shrink-0">
@@ -223,12 +270,18 @@ export default function Navbar() {
             📘 공식 가이드
           </Link>
           <Link
-            href="/free-wiki"
+            href="/free-wiki#wiki"
             className={`flex-1 py-1.5 text-center rounded-lg font-medium whitespace-nowrap transition-colors text-xs ${
               pathname.startsWith('/free-wiki') ? 'bg-white/[0.08] text-white border border-white/[0.1]' : 'text-zinc-400'
             }`}
           >
-            ✍️ 자유 게시판
+            📖 자유 위키
+          </Link>
+          <Link
+            href="/free-wiki#board"
+            className="flex-1 py-1.5 text-center rounded-lg font-medium whitespace-nowrap transition-colors text-xs text-zinc-400"
+          >
+            💬 자유 게시판
           </Link>
           <button
             onClick={copyServerIp}
@@ -363,6 +416,15 @@ export default function Navbar() {
             )}
           </div>
         </div>
+      )}
+
+      {/* 관리자 신고 관리 모달 */}
+      {user.role === 'developer' && (
+        <AdminReportsModal
+          isOpen={showReportsModal}
+          onClose={() => setShowReportsModal(false)}
+          onReportsUpdated={loadPendingReports}
+        />
       )}
     </>
   )

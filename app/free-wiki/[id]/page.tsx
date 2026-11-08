@@ -9,6 +9,7 @@ import { getFreeDocById, getFreeDocComments, addFreeDocComment, deleteFreeDocCom
 import { useAuth } from '@/lib/auth'
 import WikiMarkdownRenderer from '@/components/WikiMarkdownRenderer'
 import MarkdownEditor from '@/components/MarkdownEditor'
+import ReportModal from '@/components/ReportModal'
 import { 
   MessageSquare, 
   ThumbsUp, 
@@ -22,8 +23,33 @@ import {
   Trash2,
   Edit3,
   Save,
-  X
+  X,
+  AlertTriangle,
+  BookOpen,
+  List,
+  Sparkles
 } from 'lucide-react'
+
+interface TocItem {
+  id: string
+  level: number
+  text: string
+}
+
+function extractToc(markdown: string): TocItem[] {
+  const lines = (markdown || '').split('\n')
+  const items: TocItem[] = []
+  lines.forEach(line => {
+    const match = line.match(/^(#{1,3})\s+(.+)$/)
+    if (match) {
+      const level = match[1].length
+      const text = match[2].replace(/[*_`#]/g, '').trim()
+      const id = text.toLowerCase().replace(/[^\w\uAC00-\uD7A3]+/g, '-')
+      items.push({ id, level, text })
+    }
+  })
+  return items
+}
 
 export default function FreeDocDetailPage() {
   const params = useParams()
@@ -40,6 +66,8 @@ export default function FreeDocDetailPage() {
   const [copied, setCopied] = useState(false)
   const [loading, setLoading] = useState(true)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [showReportModal, setShowReportModal] = useState(false)
+  const [showToc, setShowToc] = useState(true)
 
   // 수정 모드 상태
   const [isEditing, setIsEditing] = useState(false)
@@ -179,8 +207,11 @@ export default function FreeDocDetailPage() {
     )
   }
 
+  const isWikiDoc = doc.category === '자유위키' || doc.docType === 'wiki'
+  // 나무위키식 참여형 편집: 자유위키 문서는 모든 유저가 자유롭게 기여 및 수정 가능
+  const canEdit = isWikiDoc || isDeveloper || doc.author === user.name || isMyDoc(doc.id)
   const canDelete = isDeveloper || doc.author === user.name || isMyDoc(doc.id)
-  const canEdit = isDeveloper || doc.author === user.name || isMyDoc(doc.id)
+  const toc = extractToc(doc.content)
 
   return (
     <div className="min-h-screen flex flex-col text-zinc-900 dark:text-zinc-100">
@@ -189,24 +220,42 @@ export default function FreeDocDetailPage() {
       <main className="max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
         
         {/* 상단 브레드크럼 및 공유/수정/삭제 버튼 */}
-        <div className="flex items-center justify-between pb-4 border-b border-white/[0.07] mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-white/[0.07] mb-6">
           <div className="flex items-center space-x-2 text-xs text-zinc-400">
             <Link href="/" className="hover:text-white transition">홈</Link>
             <ChevronRight className="w-3.5 h-3.5 text-zinc-600" />
-            <Link href="/free-wiki" className="hover:text-white transition">자유 게시판</Link>
+            <Link 
+              href={isWikiDoc ? "/free-wiki#wiki" : "/free-wiki#board"} 
+              className="hover:text-white transition font-semibold"
+            >
+              {isWikiDoc ? "📖 자유 위키" : "💬 자유 게시판"}
+            </Link>
             <ChevronRight className="w-3.5 h-3.5 text-zinc-600" />
             <span className="text-zinc-200 font-medium truncate max-w-[200px]">{doc.title}</span>
           </div>
 
-          <div className="flex items-center space-x-2">
-            {/* 수정 버튼: 개발자는 모든 글, 일반 유저는 본인 글만 */}
+          <div className="flex items-center space-x-2 shrink-0">
+            {/* 수정 버튼: 자유위키는 누구나 기여 가능, 게시판은 본인/관리자만 */}
             {canEdit && !isEditing && (
               <button
                 onClick={startEditing}
-                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/25 hover:bg-indigo-500/20 text-indigo-300 text-xs font-medium transition active:scale-95"
+                className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/25 hover:bg-indigo-500/25 text-indigo-300 text-xs font-semibold transition active:scale-95"
+                title={isWikiDoc ? "나무위키처럼 누구나 문서를 보완하고 편집할 수 있습니다." : "게시글 수정"}
               >
                 <Edit3 className="w-3.5 h-3.5" />
-                <span>수정</span>
+                <span>{isWikiDoc ? "문서 편집(자유 기여)" : "수정"}</span>
+              </button>
+            )}
+
+            {/* 🚨 신고 버튼 */}
+            {!isEditing && (
+              <button
+                onClick={() => setShowReportModal(true)}
+                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-rose-950/20 border border-rose-500/25 hover:bg-rose-950/40 text-rose-400 text-xs font-medium transition active:scale-95"
+                title="부적절한 내용 신고"
+              >
+                <AlertTriangle className="w-3.5 h-3.5" />
+                <span>신고</span>
               </button>
             )}
 
@@ -309,8 +358,12 @@ export default function FreeDocDetailPage() {
           ) : (
             <>
               <div className="flex items-center space-x-2.5 mb-3.5">
-                <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-white/[0.04] border border-white/[0.08] text-zinc-300">
-                  {doc.category}
+                <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${
+                  isWikiDoc
+                    ? 'bg-indigo-500/15 border-indigo-500/30 text-indigo-300'
+                    : 'bg-violet-500/15 border-violet-500/30 text-violet-300'
+                }`}>
+                  {isWikiDoc ? '📖 자유위키 문서' : `💬 ${doc.category}`}
                 </span>
                 <span className="text-xs text-zinc-300 font-medium flex items-center space-x-1">
                   <User className="w-3 h-3 text-indigo-400" />
@@ -331,6 +384,39 @@ export default function FreeDocDetailPage() {
                   <p className="text-xs sm:text-sm text-indigo-300/90 font-medium leading-relaxed bg-indigo-500/10 border-l-2 border-indigo-500/60 px-3.5 py-2 rounded-r-xl">
                     💡 {doc.subtitle}
                   </p>
+                </div>
+              )}
+
+              {/* 📑 나무위키 스타일 목차 (Table of Contents) 박스 */}
+              {isWikiDoc && toc.length > 0 && (
+                <div className="mb-6 p-4 rounded-2xl bg-white/[0.03] border border-white/[0.08] max-w-sm">
+                  <div className="flex items-center justify-between mb-2 pb-1.5 border-b border-white/[0.06]">
+                    <span className="text-xs font-bold text-white flex items-center space-x-1.5">
+                      <List className="w-3.5 h-3.5 text-indigo-400" />
+                      <span>목차</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setShowToc(v => !v)}
+                      className="text-[10px] text-zinc-400 hover:text-white"
+                    >
+                      {showToc ? '[접기]' : '[펼치기]'}
+                    </button>
+                  </div>
+                  {showToc && (
+                    <ol className="space-y-1 text-xs text-zinc-300">
+                      {toc.map((item, idx) => (
+                        <li
+                          key={idx}
+                          style={{ paddingLeft: `${(item.level - 1) * 12}px` }}
+                          className="hover:text-indigo-300 transition"
+                        >
+                          <span className="font-mono text-indigo-400 font-semibold mr-1.5">{idx + 1}.</span>
+                          <span>{item.text}</span>
+                        </li>
+                      ))}
+                    </ol>
+                  )}
                 </div>
               )}
 
@@ -440,6 +526,15 @@ export default function FreeDocDetailPage() {
           </div>
         </section>
       </main>
+
+      {/* 🚨 신고 모달 */}
+      <ReportModal
+        isOpen={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        targetId={doc.id}
+        targetType={isWikiDoc ? 'wiki' : 'post'}
+        targetTitle={doc.title}
+      />
     </div>
   )
 }
