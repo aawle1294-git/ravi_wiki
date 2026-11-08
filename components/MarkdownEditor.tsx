@@ -28,6 +28,7 @@ interface MarkdownEditorProps {
   onChange: (value: string) => void
   placeholder?: string
   minHeight?: string
+  maxLength?: number
 }
 
 // 색상 팔레트
@@ -60,7 +61,8 @@ export default function MarkdownEditor({
   value,
   onChange,
   placeholder = '마크다운 형식으로 자유롭게 작성하세요...',
-  minHeight = '360px'
+  minHeight = '360px',
+  maxLength = 2000
 }: MarkdownEditorProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [viewMode, setViewMode] = useState<'edit' | 'split' | 'preview'>('split')
@@ -98,10 +100,14 @@ export default function MarkdownEditor({
     const textToInsert = selectedText || defaultPlaceholder
     const replacement = `${prefix}${textToInsert}${suffix}`
 
-    const newValue = 
+    let newValue = 
       textarea.value.substring(0, start) + 
       replacement + 
       textarea.value.substring(end)
+
+    if (maxLength && newValue.length > maxLength) {
+      newValue = newValue.substring(0, maxLength)
+    }
 
     onChange(newValue)
 
@@ -323,7 +329,14 @@ export default function MarkdownEditor({
             <textarea
               ref={textareaRef}
               value={value}
-              onChange={(e) => onChange(e.target.value)}
+              onChange={(e) => {
+                let text = e.target.value
+                if (maxLength && text.length > maxLength) {
+                  text = text.substring(0, maxLength)
+                }
+                onChange(text)
+              }}
+              maxLength={maxLength}
               placeholder={placeholder}
               style={{ minHeight }}
               className="w-full h-full p-4 bg-transparent text-zinc-100 font-mono text-sm leading-relaxed resize-y focus:outline-none placeholder-zinc-500"
@@ -349,9 +362,24 @@ export default function MarkdownEditor({
       </div>
 
       {/* 3. 하단 힌트 바 */}
-      <div className="flex items-center justify-between px-3 py-1.5 bg-white/[0.02] border-t border-white/[0.06] text-[11px] text-zinc-500">
-        <span>🎨 색상/폰트 버튼으로 텍스트 선택 후 스타일 적용 가능</span>
-        <span className="font-mono">{value.length}자</span>
+      <div className="flex items-center justify-between px-3.5 py-2 bg-white/[0.02] border-t border-white/[0.06] text-[11px] text-zinc-500">
+        <span className="truncate mr-2">🎨 색상/폰트/표/코드 블록 마크다운 서식 지원</span>
+        <div className="flex items-center space-x-2 shrink-0">
+          <span className={`font-mono font-medium transition-colors ${
+            value.length >= maxLength
+              ? 'text-rose-400 font-bold'
+              : value.length >= maxLength * 0.9
+                ? 'text-amber-400'
+                : 'text-zinc-400'
+          }`}>
+            {value.length.toLocaleString()} / {maxLength.toLocaleString()}자
+          </span>
+          {value.length >= maxLength && (
+            <span className="text-[10px] font-semibold text-rose-300 bg-rose-950/50 px-1.5 py-0.5 rounded border border-rose-500/30">
+              최대 글자수 도달
+            </span>
+          )}
+        </div>
       </div>
     </div>
   )

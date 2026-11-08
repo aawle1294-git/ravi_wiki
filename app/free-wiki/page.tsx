@@ -256,6 +256,10 @@ export default function FreeWikiPage() {
   // 위키 인라인 편집 저장
   const handleSaveWikiEdit = async () => {
     if (!activeDoc || !editTitle.trim() || !editContent.trim()) return
+    if (editContent.trim().length > 2000) {
+      alert('위키 본문은 최대 2,000자까지 작성할 수 있습니다. (현재: ' + editContent.trim().length + '자)')
+      return
+    }
     setIsSavingWiki(true)
     const ok = await updateFreeDoc(activeDoc.id, {
       title: editTitle.trim(),
@@ -296,6 +300,11 @@ export default function FreeWikiPage() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!newTitle.trim() || !newContent.trim()) return
+
+    if (newContent.trim().length > 2000) {
+      alert('내용은 최대 2,000자까지 작성할 수 있습니다. (현재: ' + newContent.trim().length + '자)')
+      return
+    }
 
     setIsSubmitting(true)
     const authorName = newAuthor.trim() || user.name || (modalMode === 'wiki' ? '위키 기여자' : '라비 유저')
@@ -602,13 +611,17 @@ export default function FreeWikiPage() {
                       </div>
 
                       <div>
-                        <label className="block text-xs font-semibold text-zinc-300 mb-1">
-                          문서 본문 (# 대제목, ## 소제목으로 작성 시 목차가 자동 생성됩니다)
-                        </label>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="text-xs font-semibold text-zinc-300">
+                            문서 본문 (# 대제목, ## 소제목으로 작성 시 목차가 자동 생성됩니다)
+                          </label>
+                          <span className="text-[10px] text-zinc-500 font-mono">최대 2,000자</span>
+                        </div>
                         <MarkdownEditor
                           value={editContent}
                           onChange={setEditContent}
-                          placeholder="위키 본문을 작성하세요..."
+                          maxLength={2000}
+                          placeholder="위키 본문을 작성하세요... (최대 2,000자)"
                           minHeight="380px"
                         />
                       </div>
@@ -880,17 +893,21 @@ export default function FreeWikiPage() {
 
                     <div className="relative">
                       <textarea
-                        placeholder="의견이나 추가 정보를 작성하세요..."
+                        placeholder="의견이나 추가 정보를 작성하세요... (최대 2,000자)"
                         value={newComment}
                         onChange={e => setNewComment(e.target.value)}
+                        maxLength={2000}
                         rows={2}
                         required
                         className="w-full p-3 rounded-xl bg-white/[0.03] border border-white/[0.08] text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/60 resize-none"
                       />
-                      <div className="flex justify-end mt-2">
+                      <div className="flex items-center justify-between mt-2">
+                        <span className="text-[10px] text-zinc-500 font-mono">
+                          {newComment.length} / 2,000자
+                        </span>
                         <button
                           type="submit"
-                          disabled={!newComment.trim()}
+                          disabled={!newComment.trim() || newComment.length > 2000}
                           className="flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-xs font-bold transition shadow-sm"
                         >
                           <Send className="w-3.5 h-3.5" />
@@ -1289,13 +1306,19 @@ export default function FreeWikiPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-zinc-300 mb-1">본문 내용 (마크다운 지원)</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-semibold text-zinc-300">
+                    본문 내용 (마크다운 지원)
+                  </label>
+                  <span className="text-[10px] text-zinc-500 font-mono">최대 2,000자</span>
+                </div>
                 <MarkdownEditor
                   value={newContent}
                   onChange={setNewContent}
+                  maxLength={2000}
                   placeholder={modalMode === 'wiki'
-                    ? '위키 문서 내용을 자유롭게 작성하세요... (# 대제목, ## 소제목으로 작성 시 자동 목차가 생성됩니다)'
-                    : '게시글 내용을 작성하세요...'}
+                    ? '위키 문서 내용을 자유롭게 작성하세요... (최대 2,000자, # 대제목으로 자동 목차 생성)'
+                    : '게시글 내용을 작성하세요... (최대 2,000자)'}
                   minHeight="260px"
                 />
               </div>
