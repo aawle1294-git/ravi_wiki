@@ -71,3 +71,202 @@ body {
 .subtle-ring {
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
+
+/* ========================================================= */
+/* ☀️ 화이트 모드 (Light Mode Theme) 전용 스타일링 */
+/* ========================================================= */
+html.light {
+  color-scheme: light;
+}
+
+html.light body {
+  background-color: #f8fafc;
+  color: #1e293b;
+  background-image: 
+    radial-gradient(ellipse 80% 50% at 50% -15%, rgba(99, 102, 241, 0.08), transparent 70%),
+    radial-gradient(ellipse 40% 30% at 85% 20%, rgba(139, 92, 246, 0.05), transparent 60%),
+    radial-gradient(rgba(0, 0, 0, 0.04) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 28px 28px;
+}
+
+/* 라이트 모드 스크롤바 */
+html.light ::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.16);
+}
+html.light ::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.28);
+}
+
+/* 라이트 모드 글래스 패널 */
+html.light .glass-panel {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  box-shadow: 
+    0 1px 3px 0 rgba(0, 0, 0, 0.04),
+    0 10px 25px -5px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 0 rgba(255, 255, 255, 1);
+}
+
+html.light .glass-panel-hover:hover {
+  background: rgba(255, 255, 255, 0.98);
+  border-color: rgba(99, 102, 241, 0.35);
+  box-shadow: 
+    0 14px 30px -6px rgba(0, 0, 0, 0.08),
+    0 0 20px -2px rgba(99, 102, 241, 0.1),
+    inset 0 1px 0 0 rgba(255, 255, 255, 1);
+}
+
+/* 네비게이션 헤더 */
+html.light header {
+  background-color: rgba(255, 255, 255, 0.88) !important;
+  border-bottom-color: rgba(226, 232, 240, 0.9) !important;
+  color: #0f172a !important;
+}
+
+html.light header .text-white {
+  color: #0f172a !important;
+}
+
+html.light .bg-\[\#090a0f\]\/80,
+html.light .bg-\[\#090a0f\]\/90 {
+  background-color: rgba(255, 255, 255, 0.94) !important;
+  border-color: rgba(226, 232, 240, 0.8) !important;
+}
+
+/* 텍스트 가독성 최적화 */
+html.light h1:not(.keep-white),
+html.light h2:not(.keep-white),
+html.light h3:not(.keep-white),
+html.light h4:not(.keep-white) {
+  color: #0f172a;
+}
+
+/* 기본 텍스트 색상 전환 (단, 단색 배경 버튼 등은 흰색 텍스트 유지) */
+html.light .text-zinc-100 { color: #0f172a !important; }
+html.light .text-zinc-200 { color: #1e293b !important; }
+html.light .text-zinc-300 { color: #334155 !important; }
+html.light .text-zinc-400 { color: #475569 !important; }
+html.light .text-zinc-500 { color: #64748b !important; }
+html.light .text-zinc-600 { color: #94a3b8 !important; }
+
+/* 배경 및 경계선 반전 */
+html.light .bg-white\/\[0\.02\],
+html.light .bg-white\/\[0\.03\],
+html.light .bg-white\/\[0\.04\],
+html.light .bg-white\/\[0\.05\],
+html.light .bg-white\/\[0\.06\],
+html.light .bg-white\/\[0\.08\] {
+  background-color: rgba(241, 245, 249, 0.85) !important;
+}
+
+html.light .hover\:bg-white\/\[0\.03\]:hover,
+html.light .hover\:bg-white\/\[0\.04\]:hover,
+html.light .hover\:bg-white\/\[0\.07\]:hover,
+html.light .hover\:bg-white\/\[0\.08\]:hover,
+html.light .hover\:bg-white\/\[0\.09\]:hover,
+html.light .hover\:bg-white\/\[0\.1\]:hover {
+  background-color: rgba(226, 232, 240, 0.95) !important;
+}
+
+html.light .border-white\/\[0\.06\],
+html.light .border-white\/\[0\.07\],
+html.light .border-white\/\[0\.08\],
+html.light .border-white\/\[0\.1\],
+html.light .border-white\/\[0\.12\],
+html.light .border-white\/\[0\.15\] {
+  border-color: rgba(226, 232, 240, 0.95) !important;
+}
+
+/* 단색 버튼 흰색 텍스트 유지 */
+html.light .bg-indigo-600,
+html.light .bg-indigo-600 *,
+html.light .bg-indigo-500,
+html.light .bg-indigo-500 *,
+html.light .bg-\[\#5865F2\],
+html.light .bg-\[\#5865F2\] *,
+html.light .bg-emerald-600,
+html.light .bg-emerald-600 *,
+html.light .bg-rose-600,
+html.light .bg-rose-600 * {
+  color: #ffffff !important;
+}
+
+/* 액센트 텍스트 명도 보정 (흰색 배경에서도 가독성 확보) */
+html.light .text-indigo-400 { color: #4f46e5 !important; }
+html.light .text-indigo-300 { color: #4338ca !important; }
+html.light .text-violet-400 { color: #7c3aed !important; }
+html.light .text-violet-300 { color: #6d28d9 !important; }
+html.light .text-emerald-400 { color: #059669 !important; }
+html.light .text-rose-400 { color: #e11d48 !important; }
+html.light .text-amber-400 { color: #d97706 !important; }
+
+/* 폼 입력창 스타일 */
+html.light input:not([type="checkbox"]):not([type="radio"]),
+html.light textarea,
+html.light select {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+html.light select option {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+html.light input::placeholder,
+html.light textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* 마크다운 에디터 & 렌더러 */
+html.light .bg-\[\#0c0e16\],
+html.light .bg-\[\#13161f\],
+html.light .bg-\[\#0e111a\],
+html.light .bg-\[\#0d0f17\] {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+}
+
+html.light .bg-black\/25,
+html.light .bg-black\/40 {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+
+html.light .bg-black\/60,
+html.light .bg-black\/80 {
+  background-color: rgba(15, 23, 42, 0.45) !important;
+}
+
+html.light table th {
+  color: #0f172a !important;
+  background-color: #f1f5f9 !important;
+}
+
+html.light table td {
+  color: #334155 !important;
+  border-bottom-color: #e2e8f0 !important;
+}
+
+html.light blockquote {
+  background-color: #f8fafc !important;
+  color: #334155 !important;
+  border-left-color: #6366f1 !important;
+}
+
+html.light code {
+  background-color: #f1f5f9 !important;
+  color: #4f46e5 !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* 모달 팝업 내부 카드 */
+html.light .glass-panel.max-w-md,
+html.light .glass-panel.max-w-xl,
+html.light .glass-panel.max-w-3xl {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.15) !important;
+}
+

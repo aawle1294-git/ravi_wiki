@@ -154,7 +154,7 @@ export default function FreeDocDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col text-zinc-100">
+      <div className="min-h-screen flex flex-col text-zinc-900 dark:text-zinc-100">
         <Navbar />
         <div className="text-center py-24 text-zinc-500 text-xs">게시글을 불러오는 중입니다...</div>
       </div>
@@ -163,7 +163,7 @@ export default function FreeDocDetailPage() {
 
   if (!doc) {
     return (
-      <div className="min-h-screen flex flex-col text-zinc-100">
+      <div className="min-h-screen flex flex-col text-zinc-900 dark:text-zinc-100">
         <Navbar />
         <div className="max-w-md mx-auto text-center py-24">
           <p className="text-zinc-400 text-sm mb-4">존재하지 않거나 삭제된 게시글입니다.</p>
@@ -183,7 +183,7 @@ export default function FreeDocDetailPage() {
   const canEdit = isDeveloper || doc.author === user.name || isMyDoc(doc.id)
 
   return (
-    <div className="min-h-screen flex flex-col text-zinc-100">
+    <div className="min-h-screen flex flex-col text-zinc-900 dark:text-zinc-100">
       <Navbar />
 
       <main className="max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">

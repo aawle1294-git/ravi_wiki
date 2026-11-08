@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import { AuthProvider } from '@/lib/auth'
+import { ThemeProvider } from '@/lib/theme'
 
 export const metadata: Metadata = {
   title: '라비서버 위키 | 마인크래프트 RPG RAVI SERVER',
@@ -18,11 +19,29 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="ko" className="dark">
-      <body className="min-h-screen text-zinc-100 antialiased selection:bg-indigo-600/40 selection:text-white">
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+    <html lang="ko" className="dark" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                var s = localStorage.getItem('ravi_theme');
+                var p = window.matchMedia('(prefers-color-scheme: light)').matches;
+                var t = s || (p ? 'light' : 'dark');
+                document.documentElement.classList.remove('dark', 'light');
+                document.documentElement.classList.add(t);
+                document.documentElement.style.colorScheme = t;
+              } catch(e) {}
+            `,
+          }}
+        />
+      </head>
+      <body className="min-h-screen antialiased selection:bg-indigo-600/40 selection:text-white transition-colors duration-200">
+        <ThemeProvider>
+          <AuthProvider>
+            {children}
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   )

@@ -69,7 +69,7 @@ export default function NewOfficialDocPage() {
 
   if (!isDeveloper) {
     return (
-      <div className="min-h-screen flex flex-col text-zinc-100">
+      <div className="min-h-screen flex flex-col text-zinc-900 dark:text-zinc-100">
         <Navbar />
         <main className="max-w-md mx-auto px-4 py-24 text-center flex-1">
           <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-rose-950/30 border border-rose-500/40 flex items-center justify-center text-rose-400">
@@ -93,7 +93,7 @@ export default function NewOfficialDocPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col text-zinc-100">
+    <div className="min-h-screen flex flex-col text-zinc-900 dark:text-zinc-100">
       <Navbar />
 
       <main className="max-w-5xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-1">

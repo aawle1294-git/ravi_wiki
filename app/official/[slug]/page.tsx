@@ -97,7 +97,7 @@ export default function OfficialDocDetailPage() {
 
   if (!doc) {
     return (
-      <div className="min-h-screen flex flex-col text-zinc-100">
+      <div className="min-h-screen flex flex-col text-zinc-900 dark:text-zinc-100">
         <Navbar />
         <div className="text-center py-24 text-zinc-500 text-xs">공식 문서를 불러오는 중입니다...</div>
       </div>
@@ -105,7 +105,7 @@ export default function OfficialDocDetailPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col text-zinc-100">
+    <div className="min-h-screen flex flex-col text-zinc-900 dark:text-zinc-100">
       <Navbar />
 
       <main className="max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">

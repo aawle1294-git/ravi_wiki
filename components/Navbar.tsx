@@ -14,14 +14,18 @@ import {
   X,
   Lock,
   BookOpen,
-  MessageSquare
+  MessageSquare,
+  Sun,
+  Moon
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth'
+import { useTheme } from '@/lib/theme'
 import ServerStatusBadge from './ServerStatusBadge'
 
 export default function Navbar() {
   const pathname = usePathname()
   const { user, loginAsDeveloper, loginAsPlayer, logout } = useAuth()
+  const { theme, toggleTheme } = useTheme()
   
   const [copied, setCopied] = useState(false)
   const [showLoginModal, setShowLoginModal] = useState(false)
@@ -152,6 +156,24 @@ export default function Navbar() {
               </svg>
               <span className="font-semibold text-[11px]">디스코드</span>
             </a>
+
+            {/* ☀️ / 🌙 화이트 모드 & 다크 모드 전환 토글 버튼 */}
+            <button
+              onClick={toggleTheme}
+              className={`p-1.5 sm:p-2 rounded-full border transition-all shrink-0 active:scale-95 flex items-center justify-center ${
+                theme === 'light'
+                  ? 'bg-amber-500/10 hover:bg-amber-500/20 border-amber-500/30 text-amber-600 shadow-sm'
+                  : 'bg-white/[0.04] hover:bg-white/[0.08] border-white/[0.08] text-amber-300 hover:text-amber-200'
+              }`}
+              title={theme === 'light' ? '다크 모드로 전환' : '화이트 모드로 전환'}
+              aria-label={theme === 'light' ? '다크 모드로 전환' : '화이트 모드로 전환'}
+            >
+              {theme === 'light' ? (
+                <Moon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-600 transition-transform" />
+              ) : (
+                <Sun className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400 transition-transform hover:rotate-45" />
+              )}
+            </button>
 
             {/* 로그인 / 사용자 상태 */}
             {user.role === 'developer' ? (

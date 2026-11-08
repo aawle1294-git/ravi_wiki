@@ -59,7 +59,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col text-zinc-100 selection:bg-indigo-500/30 selection:text-indigo-200">
+    <div className="min-h-screen flex flex-col text-zinc-900 dark:text-zinc-100 selection:bg-indigo-500/30 selection:text-indigo-200">
       <Navbar />
 
       <main className="flex-1">
@@ -94,9 +94,9 @@ export default function HomePage() {
             </div>
 
             {/* 메인 타이틀 */}
-            <h1 className="text-4xl sm:text-6xl font-extrabold text-white tracking-tight leading-[1.12] mb-5">
+            <h1 className="text-4xl sm:text-6xl font-extrabold text-zinc-900 dark:text-white tracking-tight leading-[1.12] mb-5">
               라비서버{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-zinc-100 via-indigo-200 to-zinc-400">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-violet-600 to-indigo-800 dark:from-zinc-100 dark:via-indigo-200 dark:to-zinc-400">
                 위키 & 커뮤니티
               </span>
             </h1>
