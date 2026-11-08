@@ -116,9 +116,18 @@ export default function Navbar() {
                   <span className="font-bold text-sm sm:text-base tracking-tight text-white group-hover:text-indigo-200 transition-colors">
                     라비서버
                   </span>
-                  <span className="text-[10px] font-semibold px-1.5 py-0.2 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-                    WIKI
-                  </span>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      setShowVersionModal(true)
+                    }}
+                    className="text-[10px] font-semibold px-1.5 py-0.2 rounded bg-indigo-500/20 hover:bg-indigo-500/35 text-indigo-300 border border-indigo-500/30 transition cursor-pointer flex items-center space-x-1"
+                    title={`라비위키 웹사이트 ${activeVer.version} (클릭하여 지금 & 옛날버전 확인)`}
+                  >
+                    <span>WIKI</span>
+                    <span className="font-mono text-[9px] opacity-80">{activeVer.version}</span>
+                  </button>
                 </div>
                 <span className="text-[9px] text-zinc-500 font-mono tracking-wider">
                   mcravi.m-c.kr
@@ -165,23 +174,6 @@ export default function Navbar() {
           {/* 우측 도구: 실시간 서버 상태 + IP 복사 + 디스코드 + 로그인 */}
           <div className="flex items-center space-x-1.5 sm:space-x-2 shrink-0 whitespace-nowrap">
             
-            {/* 🌐 웹사이트 버전 (지금 vs 옛날) 버튼 */}
-            <button
-              onClick={() => setShowVersionModal(true)}
-              className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-full border text-xs font-semibold transition active:scale-95 shrink-0 ${
-                selectedVersion === 'current'
-                  ? 'bg-indigo-500/10 hover:bg-indigo-500/20 border-indigo-500/30 text-indigo-300'
-                  : 'bg-amber-500/10 hover:bg-amber-500/20 border-amber-500/30 text-amber-300'
-              }`}
-              title="라비위키 웹사이트 버전 기록 (지금 & 옛날 버전)"
-            >
-              <Globe className="w-3.5 h-3.5 text-indigo-400" />
-              <span className="font-mono text-[11px] font-bold">{activeVer.version}</span>
-              <span className="text-[10px] hidden sm:inline opacity-85">
-                ({selectedVersion === 'current' ? '지금' : '옛날'})
-              </span>
-            </button>
-
             {/* 실시간 서버 온라인 뱃지 */}
             <ServerStatusBadge />
 

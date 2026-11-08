@@ -443,7 +443,7 @@ export default function FreeWikiPage() {
                       오픈 백과
                     </span>
                     <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-indigo-500/15 border border-indigo-500/30 text-indigo-300">
-                      Web {activeVer.version}
+                      Web {activeVer?.version || 'v2.2.0'}
                     </span>
                   </div>
                   <p className="text-xs text-zinc-400">
@@ -1173,7 +1173,7 @@ export default function FreeWikiPage() {
                       )}
 
                       <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed line-clamp-2">
-                        {doc.content.replace(/<[^>]+>/g, '').replace(/#+\s|[*_`>-]\s?|\n/g, ' ').trim()}
+                        {(doc.content || '').slice(0, 300).replace(/<[^>]+>/g, '').replace(/#+\s|[*_`>-]\s?|\n/g, ' ').trim()}
                       </p>
                     </div>
 

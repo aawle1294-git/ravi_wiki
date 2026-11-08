@@ -228,7 +228,12 @@ export async function getFreeDocs(): Promise<FreeDoc[]> {
 
       if (!error && data && data.length > 0) {
         return data
-          .filter((d: any) => d.category !== '__DELETED__' && !deletedIds.includes(d.id))
+          .filter((d: any) => 
+            d.category !== '__DELETED__' && 
+            !deletedIds.includes(d.id) &&
+            !d.title?.startsWith('[삭제') &&
+            !d.title?.startsWith('[정리')
+          )
           .map((d: any) => {
             let parsedSubtitle = d.subtitle || undefined
             let cleanContent = (d.content || '').replace(/\\n/g, '\n').replace(/\\r/g, '')
@@ -237,14 +242,17 @@ export async function getFreeDocs(): Promise<FreeDoc[]> {
               parsedSubtitle = subMatch[1]
               cleanContent = cleanContent.replace(/^<!--subtitle:(.*?)-->\s*\n?/, '')
             }
+            if (cleanContent.length > 2000) {
+              cleanContent = cleanContent.slice(0, 2000)
+            }
             const isWiki = d.docType === 'wiki' || d.category === '자유위키'
             return {
               id: d.id,
-              title: d.title,
-              subtitle: parsedSubtitle,
+              title: (d.title || '').slice(0, 100),
+              subtitle: parsedSubtitle ? parsedSubtitle.slice(0, 100) : undefined,
               category: d.category,
               docType: isWiki ? 'wiki' : 'post',
-              author: d.author,
+              author: (d.author || '익명').slice(0, 30),
               content: cleanContent,
               likes: d.likes || 1,
               updatedAt: d.created_at ? new Date(d.created_at).toLocaleString('ko-KR') : '방금 전'
@@ -259,7 +267,20 @@ export async function getFreeDocs(): Promise<FreeDoc[]> {
     if (saved) {
       try {
         const parsed = JSON.parse(saved)
-        return parsed.filter((d: FreeDoc) => d.category !== '__DELETED__' && !deletedIds.includes(d.id))
+        return parsed
+          .filter((d: FreeDoc) => 
+            d.category !== '__DELETED__' && 
+            !deletedIds.includes(d.id) &&
+            !d.title?.startsWith('[삭제') &&
+            !d.title?.startsWith('[정리')
+          )
+          .map((d: FreeDoc) => ({
+            ...d,
+            title: (d.title || '').slice(0, 100),
+            subtitle: d.subtitle ? d.subtitle.slice(0, 100) : undefined,
+            author: (d.author || '익명').slice(0, 30),
+            content: (d.content || '').slice(0, 2000)
+          }))
       } catch (e) {}
     }
   }
@@ -281,8 +302,17 @@ export async function getFreeDocById(id: string): Promise<FreeDoc | null> {
 export async function saveFreeDoc(doc: Omit<FreeDoc, 'id'>): Promise<FreeDoc> {
   const newId = Date.now().toString()
   const isWiki = doc.docType === 'wiki' || doc.category === '자유위키'
+  const safeTitle = (doc.title || '').trim().slice(0, 100)
+  const safeSubtitle = doc.subtitle ? doc.subtitle.trim().slice(0, 100) : undefined
+  const safeAuthor = (doc.author || '라비 유저').trim().slice(0, 30)
+  const safeContent = (doc.content || '').trim().slice(0, 2000)
+
   const completeDoc: FreeDoc = {
     ...doc,
+    title: safeTitle,
+    subtitle: safeSubtitle,
+    author: safeAuthor,
+    content: safeContent,
     id: newId,
     docType: isWiki ? 'wiki' : 'post'
   }
@@ -298,16 +328,16 @@ export async function saveFreeDoc(doc: Omit<FreeDoc, 'id'>): Promise<FreeDoc> {
 
   if (isSupabaseConfigured && supabase) {
     try {
-      const enrichedContent = doc.subtitle
-        ? `<!--subtitle:${doc.subtitle}-->\n${doc.content}`
-        : doc.content
+      const enrichedContent = safeSubtitle
+        ? `<!--subtitle:${safeSubtitle}-->\n${safeContent}`
+        : safeContent
 
       const { data, error } = await supabase
         .from('free_docs')
         .insert({
-          title: doc.title,
+          title: safeTitle,
           category: doc.category,
-          author: doc.author,
+          author: safeAuthor,
           content: enrichedContent,
           likes: doc.likes || 1
         })
@@ -319,10 +349,10 @@ export async function saveFreeDoc(doc: Omit<FreeDoc, 'id'>): Promise<FreeDoc> {
         return {
           id: data.id,
           title: data.title,
-          subtitle: doc.subtitle,
+          subtitle: safeSubtitle,
           category: data.category,
           author: data.author,
-          content: doc.content,
+          content: safeContent,
           likes: data.likes,
           updatedAt: new Date(data.created_at).toLocaleString('ko-KR')
         }
@@ -415,6 +445,11 @@ export async function likeFreeDoc(id: string): Promise<{ success: boolean; newLi
  * ✍️ 자유 위키 게시글 수정 (작성자 또는 개발자)
  */
 export async function updateFreeDoc(id: string, updates: Partial<Pick<FreeDoc, 'title' | 'subtitle' | 'category' | 'content'>>): Promise<boolean> {
+  const safeUpdates: any = { ...updates }
+  if (safeUpdates.title !== undefined) safeUpdates.title = safeUpdates.title.trim().slice(0, 100)
+  if (safeUpdates.subtitle !== undefined) safeUpdates.subtitle = safeUpdates.subtitle.trim().slice(0, 100)
+  if (safeUpdates.content !== undefined) safeUpdates.content = safeUpdates.content.trim().slice(0, 2000)
+
   // 1. localStorage 동기화
   if (typeof window !== 'undefined') {
     const saved = localStorage.getItem('ravi_free_wiki_docs')
@@ -422,7 +457,7 @@ export async function updateFreeDoc(id: string, updates: Partial<Pick<FreeDoc, '
       try {
         const parsed = JSON.parse(saved)
         const updated = parsed.map((d: FreeDoc) =>
-          d.id === id ? { ...d, ...updates, updatedAt: '방금 전 (수정됨)' } : d
+          d.id === id ? { ...d, ...safeUpdates, updatedAt: '방금 전 (수정됨)' } : d
         )
         localStorage.setItem('ravi_free_wiki_docs', JSON.stringify(updated))
       } catch (e) {}
@@ -433,12 +468,12 @@ export async function updateFreeDoc(id: string, updates: Partial<Pick<FreeDoc, '
   if (isSupabaseConfigured && supabase) {
     try {
       const dbUpdates: any = {}
-      if (updates.title !== undefined) dbUpdates.title = updates.title
-      if (updates.category !== undefined) dbUpdates.category = updates.category
+      if (safeUpdates.title !== undefined) dbUpdates.title = safeUpdates.title
+      if (safeUpdates.category !== undefined) dbUpdates.category = safeUpdates.category
 
-      if (updates.content !== undefined || updates.subtitle !== undefined) {
-        const baseContent = updates.content !== undefined ? updates.content : ''
-        const subtitle = updates.subtitle
+      if (safeUpdates.content !== undefined || safeUpdates.subtitle !== undefined) {
+        const baseContent = safeUpdates.content !== undefined ? safeUpdates.content : ''
+        const subtitle = safeUpdates.subtitle
         dbUpdates.content = subtitle ? `<!--subtitle:${subtitle}-->\n${baseContent}` : baseContent
       }
 

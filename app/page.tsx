@@ -221,34 +221,6 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* 웹사이트 버전 (지금 v2.2.0 vs 옛날 v1.0.0) 배너 */}
-            <div className="mt-6 max-w-2xl mx-auto p-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left">
-              <div className="flex items-center space-x-3">
-                <div className="p-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 shrink-0">
-                  <Globe className="w-4 h-4" />
-                </div>
-                <div>
-                  <p className="text-xs font-bold text-white flex items-center space-x-1.5">
-                    <span>웹사이트 버전:</span>
-                    <span className="text-emerald-400 font-mono font-bold">{currentVer.version} (지금)</span>
-                    <span className="text-zinc-500">vs</span>
-                    <span className="text-amber-400 font-mono font-bold">{legacyVer.version} (옛날)</span>
-                  </p>
-                  <p className="text-[11px] text-zinc-400 mt-0.5">
-                    {activeVer.description}
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowVersionModal(true)}
-                className="px-3.5 py-1.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.08] text-xs font-semibold text-zinc-200 hover:text-white transition whitespace-nowrap shrink-0 flex items-center space-x-1 self-start sm:self-auto active:scale-95"
-              >
-                <span>웹 버전 기록 보기</span>
-                <ChevronRight className="w-3.5 h-3.5 text-zinc-400" />
-              </button>
-            </div>
-
           </div>
         </section>
 
