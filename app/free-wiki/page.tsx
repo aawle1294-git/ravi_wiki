@@ -19,6 +19,7 @@ import {
   FreeDocComment
 } from '@/lib/db'
 import { useAuth } from '@/lib/auth'
+import { useVersion } from '@/lib/version'
 import MarkdownEditor from '@/components/MarkdownEditor'
 import WikiMarkdownRenderer from '@/components/WikiMarkdownRenderer'
 import ReportModal from '@/components/ReportModal'
@@ -71,6 +72,7 @@ function extractToc(markdown: string): TocItem[] {
 
 export default function FreeWikiPage() {
   const { user, isDeveloper } = useAuth()
+  const { selectedVersion, activeInfo } = useVersion()
   const router = useRouter()
 
   const [docs, setDocs] = useState<FreeDoc[]>([])
@@ -433,12 +435,19 @@ export default function FreeWikiPage() {
                   <BookOpen className="w-5 h-5 text-indigo-400" />
                 </div>
                 <div>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-2 flex-wrap gap-y-1">
                     <h2 className="text-lg sm:text-xl font-extrabold text-white tracking-tight">
                       📖 라비 자유 위키
                     </h2>
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
                       오픈 백과
+                    </span>
+                    <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border ${
+                      selectedVersion === 'current'
+                        ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300'
+                        : 'bg-amber-500/15 border-amber-500/30 text-amber-300'
+                    }`}>
+                      v{activeInfo.name} ({selectedVersion === 'current' ? '지금 버전' : '옛날 버전'})
                     </span>
                   </div>
                   <p className="text-xs text-zinc-400">

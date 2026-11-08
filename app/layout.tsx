@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 import { AuthProvider } from '@/lib/auth'
 import { ThemeProvider } from '@/lib/theme'
+import { VersionProvider } from '@/lib/version'
 
 export const metadata: Metadata = {
   title: '라비서버 위키 | 마인크래프트 RPG RAVI SERVER',
@@ -39,7 +40,9 @@ export default function RootLayout({
       <body className="min-h-screen antialiased selection:bg-indigo-600/40 selection:text-white transition-colors duration-200">
         <ThemeProvider>
           <AuthProvider>
-            {children}
+            <VersionProvider>
+              {children}
+            </VersionProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>
