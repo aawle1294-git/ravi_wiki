@@ -19,7 +19,8 @@ import {
   Moon,
   ShieldAlert,
   FileText,
-  Layers
+  Layers,
+  Globe
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth'
 import { useTheme } from '@/lib/theme'
@@ -33,7 +34,7 @@ export default function Navbar() {
   const pathname = usePathname()
   const { user, loginAsDeveloper, loginAsPlayer, logout } = useAuth()
   const { theme, toggleTheme } = useTheme()
-  const { selectedVersion, activeInfo } = useVersion()
+  const { selectedVersion, activeVer } = useVersion()
   
   const [copied, setCopied] = useState(false)
   const [showLoginModal, setShowLoginModal] = useState(false)
@@ -164,18 +165,18 @@ export default function Navbar() {
           {/* 우측 도구: 실시간 서버 상태 + IP 복사 + 디스코드 + 로그인 */}
           <div className="flex items-center space-x-1.5 sm:space-x-2 shrink-0 whitespace-nowrap">
             
-            {/* 📦 지금 & 옛날 버전 선택/설정 버튼 */}
+            {/* 🌐 웹사이트 버전 (지금 vs 옛날) 버튼 */}
             <button
               onClick={() => setShowVersionModal(true)}
               className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-full border text-xs font-semibold transition active:scale-95 shrink-0 ${
                 selectedVersion === 'current'
-                  ? 'bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/30 text-emerald-300'
+                  ? 'bg-indigo-500/10 hover:bg-indigo-500/20 border-indigo-500/30 text-indigo-300'
                   : 'bg-amber-500/10 hover:bg-amber-500/20 border-amber-500/30 text-amber-300'
               }`}
-              title="라비서버 버전 변경 및 지금/옛날 버전 정보"
+              title="라비위키 웹사이트 버전 기록 (지금 & 옛날 버전)"
             >
-              <Layers className="w-3.5 h-3.5" />
-              <span className="font-mono text-[11px] font-bold">{activeInfo.name}</span>
+              <Globe className="w-3.5 h-3.5 text-indigo-400" />
+              <span className="font-mono text-[11px] font-bold">{activeVer.version}</span>
               <span className="text-[10px] hidden sm:inline opacity-85">
                 ({selectedVersion === 'current' ? '지금' : '옛날'})
               </span>

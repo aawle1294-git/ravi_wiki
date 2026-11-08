@@ -2,81 +2,84 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
 
-export interface ServerVersionInfo {
+export interface WebsiteVersionInfo {
   id: 'current' | 'legacy'
-  name: string
+  version: string
   label: string
   releaseDate: string
   status: 'active' | 'legacy'
   badge: string
   description: string
-  features: string[]
+  changelog: string[]
 }
 
-export const DEFAULT_VERSIONS: Record<'current' | 'legacy', ServerVersionInfo> = {
+export const DEFAULT_WEBSITE_VERSIONS: Record<'current' | 'legacy', WebsiteVersionInfo> = {
   current: {
     id: 'current',
-    name: '1.21.x',
+    version: 'v2.2.0',
     label: '지금 버전 (최신)',
-    releaseDate: '최신 정규 시즌',
+    releaseDate: '2026-11-08 최신 배포',
     status: 'active',
-    badge: '현재 추천',
-    description: '마인크래프트 JE 1.21.x 기반 최신 정통 판타지 RPG 시스템 및 신규 레이드',
-    features: [
-      'JE 1.21.x 최신 클라이언트 완벽 호환',
-      '신규 직업 스킬 밸런스 및 5차 각성 시스템',
-      '네더 대성채 신규 레이드 [붉은용 카라쉬]',
-      '커스텀 3D 장비 모델링 및 전용 사운드팩 연동',
-      '통합 GUI 경매장 및 1:1 안전 거래 시스템'
+    badge: '현재 최신 버전',
+    description: '나무위키 스타일 오픈 백과사전, 유저 신고 시스템, 화이트 모드 및 2단 레이아웃 개편',
+    changelog: [
+      '📖 나무위키 스타일 중앙 거대 본문 뷰어 및 우측 문서 목록 사이드바 구현',
+      '🔍 상단 통합 검색바 (실시간 문서 매칭 드롭다운 & 원클릭 새 문서 생성 연동)',
+      '✏️ 나무위키식 인라인 자유 기여 편집 (누구나 문서 보완 및 즉시 저장 가능)',
+      '💬 자유위키와 분리된 독립형 커뮤니티 자유 게시판 공간 (#board)',
+      '🚨 악성 게시글/위키 유저 신고 시스템 및 관리자 전용 신고 보관함',
+      '☀️/🌙 화이트 모드 & 다크 모드 원클릭 테마 전환 시스템',
+      '📝 마크다운 에디터 및 본문 2,000자 제한 & 실시간 글자수 카운터',
+      '✨ 황금 R 엠블럼 고화질 무손실 로고 및 파비콘 리뉴얼'
     ]
   },
   legacy: {
     id: 'legacy',
-    name: '1.20.x',
-    label: '옛날 버전 (클래식)',
-    releaseDate: '클래식 시즌 아카이브',
+    version: 'v1.0.0',
+    label: '옛날 버전 (초기)',
+    releaseDate: '2025-12 초기 배포',
     status: 'legacy',
-    badge: '구버전 보관소',
-    description: '마인크래프트 JE 1.20.x 기반 클래식 라비서버 뼈대 시스템 및 아카이브 기록',
-    features: [
-      'JE 1.20.x 계열 레거시 클라이언트 접속 안내',
-      '클래식 3대 기본 직업(전사, 마법사, 궁수) 초기 스킬트리',
-      '구버전 전설 장비 및 오리지널 필드 보스 패턴',
-      '초기 스폰 광장 퀘스트 동선 및 아카이브 데이터'
+    badge: '이전 초기 버전',
+    description: '라비서버 공식 가이드 및 단순 카드 그리드 게시판 중심의 초기 웹사이트',
+    changelog: [
+      '📘 공식 시스템 가이드 및 서버 규칙 열람 기능',
+      '💬 포럼형 단순 카드 그리드 게시판 목록',
+      '🌙 흑요석 다크 모드 단일 테마',
+      '🔐 개발자 전용 로그인 인증 및 기본 공식 문서 편집'
     ]
   }
 }
 
-interface VersionContextType {
+interface WebsiteVersionContextType {
   selectedVersion: 'current' | 'legacy'
   setSelectedVersion: (ver: 'current' | 'legacy') => void
-  currentVersionInfo: ServerVersionInfo
-  legacyVersionInfo: ServerVersionInfo
-  activeInfo: ServerVersionInfo
-  updateCustomVersion: (verId: 'current' | 'legacy', updates: Partial<ServerVersionInfo>) => void
+  currentVer: WebsiteVersionInfo
+  legacyVer: WebsiteVersionInfo
+  activeVer: WebsiteVersionInfo
+  updateWebsiteVersion: (verId: 'current' | 'legacy', updates: Partial<WebsiteVersionInfo>) => void
 }
 
-const VersionContext = createContext<VersionContextType>({
+const WebsiteVersionContext = createContext<WebsiteVersionContextType>({
   selectedVersion: 'current',
   setSelectedVersion: () => {},
-  currentVersionInfo: DEFAULT_VERSIONS.current,
-  legacyVersionInfo: DEFAULT_VERSIONS.legacy,
-  activeInfo: DEFAULT_VERSIONS.current,
-  updateCustomVersion: () => {},
+  currentVer: DEFAULT_WEBSITE_VERSIONS.current,
+  legacyVer: DEFAULT_WEBSITE_VERSIONS.legacy,
+  activeVer: DEFAULT_WEBSITE_VERSIONS.current,
+  updateWebsiteVersion: () => {},
 })
 
 export function VersionProvider({ children }: { children: React.ReactNode }) {
   const [selectedVersion, setSelectedVersionState] = useState<'current' | 'legacy'>('current')
-  const [versions, setVersions] = useState<Record<'current' | 'legacy', ServerVersionInfo>>(DEFAULT_VERSIONS)
+  const [versions, setVersions] = useState<Record<'current' | 'legacy', WebsiteVersionInfo>>(DEFAULT_WEBSITE_VERSIONS)
 
   useEffect(() => {
     try {
-      const savedVer = localStorage.getItem('ravi_selected_version') as 'current' | 'legacy' | null
+      const savedVer = localStorage.getItem('ravi_selected_site_version') as 'current' | 'legacy' | null
       if (savedVer === 'current' || savedVer === 'legacy') {
         setSelectedVersionState(savedVer)
       }
 
-      const savedCustom = localStorage.getItem('ravi_custom_versions')
+      const savedCustom = localStorage.getItem('ravi_custom_site_versions')
       if (savedCustom) {
         setVersions(prev => ({
           ...prev,
@@ -89,39 +92,39 @@ export function VersionProvider({ children }: { children: React.ReactNode }) {
   const setSelectedVersion = (ver: 'current' | 'legacy') => {
     setSelectedVersionState(ver)
     try {
-      localStorage.setItem('ravi_selected_version', ver)
+      localStorage.setItem('ravi_selected_site_version', ver)
     } catch (e) {}
   }
 
-  const updateCustomVersion = (verId: 'current' | 'legacy', updates: Partial<ServerVersionInfo>) => {
+  const updateWebsiteVersion = (verId: 'current' | 'legacy', updates: Partial<WebsiteVersionInfo>) => {
     setVersions(prev => {
       const next = {
         ...prev,
         [verId]: { ...prev[verId], ...updates }
       }
       try {
-        localStorage.setItem('ravi_custom_versions', JSON.stringify(next))
+        localStorage.setItem('ravi_custom_site_versions', JSON.stringify(next))
       } catch (e) {}
       return next
     })
   }
 
   return (
-    <VersionContext.Provider
+    <WebsiteVersionContext.Provider
       value={{
         selectedVersion,
         setSelectedVersion,
-        currentVersionInfo: versions.current,
-        legacyVersionInfo: versions.legacy,
-        activeInfo: versions[selectedVersion],
-        updateCustomVersion
+        currentVer: versions.current,
+        legacyVer: versions.legacy,
+        activeVer: versions[selectedVersion],
+        updateWebsiteVersion
       }}
     >
       {children}
-    </VersionContext.Provider>
+    </WebsiteVersionContext.Provider>
   )
 }
 
 export function useVersion() {
-  return useContext(VersionContext)
+  return useContext(WebsiteVersionContext)
 }

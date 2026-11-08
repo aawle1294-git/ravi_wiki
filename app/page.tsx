@@ -24,12 +24,13 @@ import {
   Edit3,
   Save,
   X,
-  Clock
+  Clock,
+  Globe
 } from 'lucide-react'
 
 export default function HomePage() {
   const { isDeveloper } = useAuth()
-  const { selectedVersion, activeInfo, currentVersionInfo, legacyVersionInfo } = useVersion()
+  const { selectedVersion, activeVer, currentVer, legacyVer } = useVersion()
   const [copied, setCopied] = useState(false)
   const [showVersionModal, setShowVersionModal] = useState(false)
 
@@ -90,17 +91,13 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* 상단 뱃지: 지금 & 옛날 버전 스위처 연동 */}
-            <button
-              onClick={() => setShowVersionModal(true)}
-              className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] hover:border-indigo-500/40 text-zinc-300 text-xs font-medium mb-6 backdrop-blur-md shadow-sm transition active:scale-95 group"
-            >
-              <span className={`w-1.5 h-1.5 rounded-full ${selectedVersion === 'current' ? 'bg-emerald-400' : 'bg-amber-400 animate-pulse'}`}></span>
-              <span className="text-zinc-200 font-semibold font-mono">JE {activeInfo.name}</span>
+            {/* 상단 뱃지: 서버 기본 정보 */}
+            <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.08] text-zinc-300 text-xs font-medium mb-6 backdrop-blur-md shadow-sm">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+              <span className="text-zinc-200 font-semibold">마인크래프트 JE 1.21.x</span>
               <span className="text-zinc-600">·</span>
-              <span className="text-indigo-300">{activeInfo.label}</span>
-              <ChevronRight className="w-3.5 h-3.5 text-zinc-500 group-hover:text-indigo-300 transition-transform group-hover:translate-x-0.5" />
-            </button>
+              <span className="text-indigo-300">정통 RPG 라비서버</span>
+            </div>
 
             {/* 메인 타이틀 */}
             <h1 className="text-4xl sm:text-6xl font-extrabold text-zinc-900 dark:text-white tracking-tight leading-[1.12] mb-5">
@@ -210,21 +207,10 @@ export default function HomePage() {
                 <span className="block text-[11px] text-zinc-500 mb-0.5">서버 플랫폼</span>
                 <span className="font-semibold text-zinc-200">Java Edition</span>
               </div>
-              <button
-                type="button"
-                onClick={() => setShowVersionModal(true)}
-                className="p-2.5 rounded-xl bg-white/[0.02] hover:bg-white/[0.06] border border-white/[0.04] hover:border-indigo-500/30 transition text-left cursor-pointer group/ver"
-                title="클릭하여 지금 & 옛날 버전 비교 / 설정"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="block text-[11px] text-zinc-500 mb-0.5">접속 버전</span>
-                  <span className="text-[9px] text-indigo-400 group-hover/ver:underline">비교</span>
-                </div>
-                <span className="font-semibold text-zinc-200 font-mono flex items-center space-x-1">
-                  <span>{activeInfo.name}</span>
-                  <span className="text-[10px] text-zinc-400">({selectedVersion === 'current' ? '지금' : '옛날'})</span>
-                </span>
-              </button>
+              <div className="p-2.5 rounded-xl bg-white/[0.02] border border-white/[0.04]">
+                <span className="block text-[11px] text-zinc-500 mb-0.5">권장 버전</span>
+                <span className="font-semibold text-zinc-200">1.21.x 계열</span>
+              </div>
               <div className="p-2.5 rounded-xl bg-white/[0.02] border border-white/[0.04]">
                 <span className="block text-[11px] text-zinc-500 mb-0.5">게임 장르</span>
                 <span className="font-semibold text-zinc-200">정통 판타지 RPG</span>
@@ -235,30 +221,30 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* 지금 버전 vs 옛날 버전 퀵 배너 */}
+            {/* 웹사이트 버전 (지금 v2.2.0 vs 옛날 v1.0.0) 배너 */}
             <div className="mt-6 max-w-2xl mx-auto p-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left">
               <div className="flex items-center space-x-3">
-                <div className="p-2 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 shrink-0">
-                  <Layers className="w-4 h-4" />
+                <div className="p-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 shrink-0">
+                  <Globe className="w-4 h-4" />
                 </div>
                 <div>
                   <p className="text-xs font-bold text-white flex items-center space-x-1.5">
-                    <span>버전 시스템:</span>
-                    <span className="text-emerald-400 font-mono">지금({currentVersionInfo.name})</span>
+                    <span>웹사이트 버전:</span>
+                    <span className="text-emerald-400 font-mono font-bold">{currentVer.version} (지금)</span>
                     <span className="text-zinc-500">vs</span>
-                    <span className="text-amber-400 font-mono">옛날({legacyVersionInfo.name})</span>
+                    <span className="text-amber-400 font-mono font-bold">{legacyVer.version} (옛날)</span>
                   </p>
                   <p className="text-[11px] text-zinc-400 mt-0.5">
-                    {activeInfo.description}
+                    {activeVer.description}
                   </p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setShowVersionModal(true)}
-                className="px-3.5 py-1.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.08] text-xs font-semibold text-zinc-200 hover:text-white transition whitespace-nowrap shrink-0 flex items-center space-x-1 self-start sm:self-auto"
+                className="px-3.5 py-1.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.08] text-xs font-semibold text-zinc-200 hover:text-white transition whitespace-nowrap shrink-0 flex items-center space-x-1 self-start sm:self-auto active:scale-95"
               >
-                <span>버전 전환 및 비교</span>
+                <span>웹 버전 기록 보기</span>
                 <ChevronRight className="w-3.5 h-3.5 text-zinc-400" />
               </button>
             </div>
@@ -429,7 +415,16 @@ export default function HomePage() {
       <footer className="border-t border-white/[0.06] bg-[#07080c] py-8 text-center text-xs text-zinc-500">
         <div className="max-w-6xl mx-auto px-4 flex flex-col items-center space-y-2">
           <img src="/logo.png?v=3" alt="라비서버 로고" className="w-9 h-9 rounded-xl opacity-90 mb-1 object-cover shadow-sm" />
-          <p className="font-semibold text-zinc-400">마인크래프트 RPG 라비서버 (mcravi.m-c.kr) 공식 위키</p>
+          <div className="flex items-center space-x-2">
+            <span className="font-semibold text-zinc-400">마인크래프트 RPG 라비서버 (mcravi.m-c.kr) 공식 위키</span>
+            <button
+              onClick={() => setShowVersionModal(true)}
+              className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-white/[0.04] hover:bg-white/[0.08] text-indigo-300 border border-white/[0.08] transition"
+              title="웹사이트 버전 변경 기록 확인"
+            >
+              Web {activeVer.version}
+            </button>
+          </div>
           <p className="text-[11px]">모든 게임 콘텐츠의 저작권은 라비서버 및 Mojang Studios에 있습니다.</p>
         </div>
       </footer>
