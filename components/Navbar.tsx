@@ -100,7 +100,7 @@ export default function Navbar() {
             <Link href="/" className="flex items-center space-x-2.5 group shrink-0">
               <div className="relative shrink-0 flex items-center">
                 <img
-                  src="/logo.png"
+                  src="/logo.png?v=3"
                   alt="라비서버 로고"
                   className="w-9 h-9 sm:w-10 sm:h-10 object-contain rounded-xl drop-shadow-[0_2px_10px_rgba(245,158,11,0.3)] group-hover:scale-105 transition-transform shrink-0"
                 />

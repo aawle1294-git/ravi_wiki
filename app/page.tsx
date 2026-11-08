@@ -76,11 +76,11 @@ export default function HomePage() {
             <div className="flex justify-center mb-8">
               <div className="relative group inline-block">
                 {/* 금빛 & 인디고 앰비언트 후광 글로우 */}
-                <div className="absolute -inset-3 rounded-3xl bg-gradient-to-r from-amber-500/20 via-indigo-500/25 to-purple-500/20 blur-2xl opacity-75 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+                <div className="absolute -inset-4 rounded-3xl bg-gradient-to-r from-amber-500/25 via-indigo-500/30 to-purple-500/25 blur-2xl opacity-80 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
                 <img
-                  src="/logo.png"
+                  src="/logo.png?v=3"
                   alt="라비서버 공식 엠블럼 로고"
-                  className="relative w-28 h-28 sm:w-36 sm:h-36 object-contain rounded-3xl shadow-[0_12px_36px_rgba(0,0,0,0.6)] group-hover:scale-105 transition-transform duration-300"
+                  className="relative w-32 h-32 sm:w-40 sm:h-40 object-cover rounded-3xl shadow-[0_16px_40px_rgba(0,0,0,0.7)] border border-amber-500/20 group-hover:scale-105 transition-transform duration-300"
                 />
               </div>
             </div>
@@ -374,7 +374,7 @@ export default function HomePage() {
       {/* 푸터 */}
       <footer className="border-t border-white/[0.06] bg-[#07080c] py-8 text-center text-xs text-zinc-500">
         <div className="max-w-6xl mx-auto px-4 flex flex-col items-center space-y-2">
-          <img src="/logo.png" alt="라비서버 로고" className="w-8 h-8 rounded-lg opacity-80 mb-1" />
+          <img src="/logo.png?v=3" alt="라비서버 로고" className="w-9 h-9 rounded-xl opacity-90 mb-1 object-cover shadow-sm" />
           <p className="font-semibold text-zinc-400">마인크래프트 RPG 라비서버 (mcravi.m-c.kr) 공식 위키</p>
           <p className="text-[11px]">모든 게임 콘텐츠의 저작권은 라비서버 및 Mojang Studios에 있습니다.</p>
         </div>

@@ -7,9 +7,9 @@ export const metadata: Metadata = {
   title: '라비서버 위키 | 마인크래프트 RPG RAVI SERVER',
   description: '마인크래프트 레전드 RPG 라비서버(mcravi.m-c.kr) 공식 위키 및 자유 커뮤니티',
   icons: {
-    icon: '/logo.png',
-    shortcut: '/logo.png',
-    apple: '/logo.png',
+    icon: '/logo.png?v=3',
+    shortcut: '/logo.png?v=3',
+    apple: '/logo.png?v=3',
   },
 }
 
