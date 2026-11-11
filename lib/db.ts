@@ -237,11 +237,20 @@ export async function getFreeDocs(): Promise<FreeDoc[]> {
           .map((d: any) => {
             let parsedSubtitle = d.subtitle || undefined
             let cleanContent = (d.content || '').replace(/\\n/g, '\n').replace(/\\r/g, '')
+            let parsedDislikes = 0
+
             const subMatch = cleanContent.match(/^<!--subtitle:(.*?)-->\s*\n?/)
             if (subMatch) {
               parsedSubtitle = subMatch[1]
               cleanContent = cleanContent.replace(/^<!--subtitle:(.*?)-->\s*\n?/, '')
             }
+
+            const dislikeMatch = cleanContent.match(/^<!--dislikes:(\d+)-->\s*\n?/)
+            if (dislikeMatch) {
+              parsedDislikes = parseInt(dislikeMatch[1], 10) || 0
+              cleanContent = cleanContent.replace(/^<!--dislikes:(\d+)-->\s*\n?/, '')
+            }
+
             if (cleanContent.length > 2000) {
               cleanContent = cleanContent.slice(0, 2000)
             }
@@ -254,7 +263,8 @@ export async function getFreeDocs(): Promise<FreeDoc[]> {
               docType: isWiki ? 'wiki' : 'post',
               author: (d.author || '익명').slice(0, 30),
               content: cleanContent,
-              likes: d.likes || 1,
+              likes: d.likes !== undefined ? d.likes : 0,
+              dislikes: parsedDislikes,
               updatedAt: d.created_at ? new Date(d.created_at).toLocaleString('ko-KR') : '방금 전'
             }
           })
@@ -279,7 +289,9 @@ export async function getFreeDocs(): Promise<FreeDoc[]> {
             title: (d.title || '').slice(0, 100),
             subtitle: d.subtitle ? d.subtitle.slice(0, 100) : undefined,
             author: (d.author || '익명').slice(0, 30),
-            content: (d.content || '').slice(0, 2000)
+            content: (d.content || '').slice(0, 2000),
+            likes: d.likes !== undefined ? d.likes : 0,
+            dislikes: d.dislikes || 0
           }))
       } catch (e) {}
     }
@@ -313,6 +325,8 @@ export async function saveFreeDoc(doc: Omit<FreeDoc, 'id'>): Promise<FreeDoc> {
     subtitle: safeSubtitle,
     author: safeAuthor,
     content: safeContent,
+    likes: doc.likes !== undefined ? doc.likes : 0,
+    dislikes: doc.dislikes || 0,
     id: newId,
     docType: isWiki ? 'wiki' : 'post'
   }
@@ -328,9 +342,13 @@ export async function saveFreeDoc(doc: Omit<FreeDoc, 'id'>): Promise<FreeDoc> {
 
   if (isSupabaseConfigured && supabase) {
     try {
-      const enrichedContent = safeSubtitle
-        ? `<!--subtitle:${safeSubtitle}-->\n${safeContent}`
-        : safeContent
+      let enrichedContent = safeContent
+      if (doc.dislikes) {
+        enrichedContent = `<!--dislikes:${doc.dislikes}-->\n${enrichedContent}`
+      }
+      if (safeSubtitle) {
+        enrichedContent = `<!--subtitle:${safeSubtitle}-->\n${enrichedContent}`
+      }
 
       const { data, error } = await supabase
         .from('free_docs')
@@ -339,7 +357,7 @@ export async function saveFreeDoc(doc: Omit<FreeDoc, 'id'>): Promise<FreeDoc> {
           category: doc.category,
           author: safeAuthor,
           content: enrichedContent,
-          likes: doc.likes || 1
+          likes: doc.likes !== undefined ? doc.likes : 0
         })
         .select()
         .single()
@@ -354,6 +372,7 @@ export async function saveFreeDoc(doc: Omit<FreeDoc, 'id'>): Promise<FreeDoc> {
           author: data.author,
           content: safeContent,
           likes: data.likes,
+          dislikes: doc.dislikes || 0,
           updatedAt: new Date(data.created_at).toLocaleString('ko-KR')
         }
       }
@@ -439,6 +458,106 @@ export async function likeFreeDoc(id: string): Promise<{ success: boolean; newLi
   }
 
   return { success: true }
+}
+
+/**
+ * 👎 싫어요(비추천) 중복 방지용 로컬 추적
+ */
+export function hasDislikedDoc(id: string): boolean {
+  if (typeof window === 'undefined') return false
+  try {
+    const disliked = JSON.parse(localStorage.getItem('ravi_disliked_docs') || '[]')
+    return disliked.includes(id)
+  } catch {
+    return false
+  }
+}
+
+export function markDocAsDisliked(id: string): void {
+  if (typeof window === 'undefined') return
+  try {
+    const disliked = JSON.parse(localStorage.getItem('ravi_disliked_docs') || '[]')
+    if (!disliked.includes(id)) {
+      disliked.push(id)
+      localStorage.setItem('ravi_disliked_docs', JSON.stringify(disliked))
+    }
+  } catch {}
+}
+
+/**
+ * 👎 자유 게시판/위키 싫어요 (비추천)
+ */
+export async function dislikeFreeDoc(id: string): Promise<{ success: boolean; newDislikes?: number }> {
+  if (hasDislikedDoc(id)) {
+    return { success: false }
+  }
+
+  markDocAsDisliked(id)
+  let updatedDislikes = 1
+
+  // 1. Supabase 동기화 (content 내의 <!--dislikes:N--> 태그 갱신)
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data: current } = await supabase
+        .from('free_docs')
+        .select('content')
+        .eq('id', id)
+        .single()
+
+      if (current) {
+        let content = current.content || ''
+        const match = content.match(/<!--dislikes:(\d+)-->/)
+        if (match) {
+          const currentCount = parseInt(match[1], 10) || 0
+          updatedDislikes = currentCount + 1
+          content = content.replace(/<!--dislikes:\d+-->/, `<!--dislikes:${updatedDislikes}-->`)
+        } else {
+          updatedDislikes = 1
+          // subtitle 뒤 또는 최상단에 추가
+          if (content.startsWith('<!--subtitle:')) {
+            const subEnd = content.indexOf('-->')
+            if (subEnd !== -1) {
+              const before = content.slice(0, subEnd + 3)
+              const after = content.slice(subEnd + 3)
+              content = `${before}\n<!--dislikes:${updatedDislikes}-->${after}`
+            } else {
+              content = `<!--dislikes:${updatedDislikes}-->\n${content}`
+            }
+          } else {
+            content = `<!--dislikes:${updatedDislikes}-->\n${content}`
+          }
+        }
+
+        await supabase
+          .from('free_docs')
+          .update({ content })
+          .eq('id', id)
+      }
+    } catch (e) {
+      console.error('dislikeFreeDoc Supabase error:', e)
+    }
+  }
+
+  // 2. localStorage 동기화
+  if (typeof window !== 'undefined') {
+    const saved = localStorage.getItem('ravi_free_wiki_docs')
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        const updated = parsed.map((d: FreeDoc) => {
+          if (d.id === id) {
+            const newCount = (d.dislikes || 0) + 1
+            updatedDislikes = newCount
+            return { ...d, dislikes: newCount }
+          }
+          return d
+        })
+        localStorage.setItem('ravi_free_wiki_docs', JSON.stringify(updated))
+      } catch (e) {}
+    }
+  }
+
+  return { success: true, newDislikes: updatedDislikes }
 }
 
 /**

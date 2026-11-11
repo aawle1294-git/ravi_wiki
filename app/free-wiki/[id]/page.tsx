@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 import { FreeDoc } from '@/lib/wikiData'
-import { getFreeDocById, getFreeDocComments, addFreeDocComment, deleteFreeDocComment, likeFreeDoc, deleteFreeDoc, updateFreeDoc, hasLikedDoc, isMyDoc, FreeDocComment } from '@/lib/db'
+import { getFreeDocById, getFreeDocComments, addFreeDocComment, deleteFreeDocComment, likeFreeDoc, dislikeFreeDoc, deleteFreeDoc, updateFreeDoc, hasLikedDoc, hasDislikedDoc, isMyDoc, FreeDocComment } from '@/lib/db'
 import { useAuth } from '@/lib/auth'
 import WikiMarkdownRenderer from '@/components/WikiMarkdownRenderer'
 import MarkdownEditor from '@/components/MarkdownEditor'
@@ -13,6 +13,7 @@ import ReportModal from '@/components/ReportModal'
 import { 
   MessageSquare, 
   ThumbsUp, 
+  ThumbsDown,
   ChevronRight, 
   Clock, 
   User, 
@@ -63,6 +64,8 @@ export default function FreeDocDetailPage() {
   const [authorName, setAuthorName] = useState('')
   const [likes, setLikes] = useState(0)
   const [isLiked, setIsLiked] = useState(false)
+  const [dislikes, setDislikes] = useState(0)
+  const [isDisliked, setIsDisliked] = useState(false)
   const [copied, setCopied] = useState(false)
   const [loading, setLoading] = useState(true)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -90,6 +93,8 @@ export default function FreeDocDetailPage() {
           setDoc(d)
           setLikes(d.likes)
           setIsLiked(hasLikedDoc(id))
+          setDislikes(d.dislikes || 0)
+          setIsDisliked(hasDislikedDoc(id))
         }
         setLoading(false)
       })
@@ -106,6 +111,15 @@ export default function FreeDocDetailPage() {
     if (result.success) {
       setIsLiked(true)
       setLikes(result.newLikes !== undefined ? result.newLikes : likes + 1)
+    }
+  }
+
+  const handleDislike = async () => {
+    if (!doc || isDisliked) return
+    const result = await dislikeFreeDoc(doc.id)
+    if (result.success) {
+      setIsDisliked(true)
+      setDislikes(result.newDislikes !== undefined ? result.newDislikes : dislikes + 1)
     }
   }
 
@@ -432,20 +446,37 @@ export default function FreeDocDetailPage() {
                 <WikiMarkdownRenderer content={doc.content} />
               </div>
 
-              {/* 추천 버튼 */}
-              <div className="pt-6 flex items-center justify-center">
+              {/* 추천 / 비추천 (좋아요 / 싫어요) 버튼 */}
+              <div className="pt-6 flex items-center justify-center space-x-3">
                 <button
                   onClick={handleLike}
                   disabled={isLiked}
-                  className={`flex items-center space-x-2 px-6 py-2.5 rounded-full border transition shadow-sm active:scale-95 ${
+                  className={`flex items-center space-x-2 px-5 sm:px-6 py-2.5 rounded-full border transition shadow-sm active:scale-95 ${
                     isLiked
                       ? 'bg-indigo-600/20 border-indigo-500/50 text-indigo-200 cursor-default'
-                      : 'bg-white/[0.03] border-white/[0.08] text-zinc-300 hover:border-white/[0.18] hover:text-white'
+                      : 'bg-white/[0.03] border-white/[0.08] text-zinc-300 hover:border-indigo-500/30 hover:text-white'
                   }`}
+                  title={isLiked ? '이미 추천한 게시글입니다' : '이 게시글을 추천합니다'}
                 >
-                  <ThumbsUp className="w-4 h-4" />
+                  <ThumbsUp className="w-4 h-4 text-indigo-400" />
                   <span className="text-xs font-bold font-mono">
-                    {isLiked ? '추천됨' : '추천'} {likes}
+                    {isLiked ? '추천됨' : '좋아요'} {likes}
+                  </span>
+                </button>
+
+                <button
+                  onClick={handleDislike}
+                  disabled={isDisliked}
+                  className={`flex items-center space-x-2 px-5 sm:px-6 py-2.5 rounded-full border transition shadow-sm active:scale-95 ${
+                    isDisliked
+                      ? 'bg-rose-950/30 border-rose-500/50 text-rose-300 cursor-default'
+                      : 'bg-white/[0.03] border-white/[0.08] text-zinc-300 hover:border-rose-500/30 hover:text-rose-200'
+                  }`}
+                  title={isDisliked ? '이미 비추천한 게시글입니다' : '이 게시글을 비추천합니다'}
+                >
+                  <ThumbsDown className="w-4 h-4 text-rose-400" />
+                  <span className="text-xs font-bold font-mono">
+                    {isDisliked ? '비추천됨' : '싫어요'} {dislikes}
                   </span>
                 </button>
               </div>

@@ -17,6 +17,7 @@ export interface FreeDoc {
   author: string
   updatedAt: string
   likes: number
+  dislikes?: number
   content: string
   views?: number
 }

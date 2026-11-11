@@ -15,6 +15,8 @@ import {
   addFreeDocComment,
   deleteFreeDocComment,
   hasLikedDoc,
+  hasDislikedDoc,
+  dislikeFreeDoc,
   isMyDoc,
   FreeDocComment
 } from '@/lib/db'
@@ -28,6 +30,7 @@ import {
   MessageSquare,
   Plus,
   ThumbsUp,
+  ThumbsDown,
   Search,
   Send,
   X,
@@ -78,6 +81,7 @@ export default function FreeWikiPage() {
   const [docs, setDocs] = useState<FreeDoc[]>([])
   const [loading, setLoading] = useState(true)
   const [likedIds, setLikedIds] = useState<Set<string>>(new Set())
+  const [dislikedIds, setDislikedIds] = useState<Set<string>>(new Set())
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
   // 1. 위키 활성 문서 상태 (중앙 메인에 크게 보일 위키)
@@ -139,6 +143,8 @@ export default function FreeWikiPage() {
       setLoading(false)
       const liked = new Set(list.map(d => d.id).filter(id => hasLikedDoc(id)))
       setLikedIds(liked)
+      const disliked = new Set(list.map(d => d.id).filter(id => hasDislikedDoc(id)))
+      setDislikedIds(disliked)
 
       // URL query id 확인 또는 첫 번째 위키 문서 자동 선택
       const wikiList = list.filter(d => d.category === '자유위키' || d.docType === 'wiki')
@@ -217,6 +223,20 @@ export default function FreeWikiPage() {
       setDocs(prev => prev.map(d =>
         d.id === id
           ? { ...d, likes: result.newLikes !== undefined ? result.newLikes : d.likes + 1 }
+          : d
+      ))
+    }
+  }
+
+  // 비추천(싫어요) 핸들러
+  const handleDislike = async (id: string) => {
+    if (dislikedIds.has(id)) return
+    const result = await dislikeFreeDoc(id)
+    if (result.success) {
+      setDislikedIds(prev => new Set([...prev, id]))
+      setDocs(prev => prev.map(d =>
+        d.id === id
+          ? { ...d, dislikes: result.newDislikes !== undefined ? result.newDislikes : (d.dislikes || 0) + 1 }
           : d
       ))
     }
@@ -751,20 +771,37 @@ export default function FreeWikiPage() {
                         <WikiMarkdownRenderer content={activeDoc.content} />
                       </div>
 
-                      {/* 추천 버튼 */}
-                      <div className="pt-6 flex items-center justify-center">
+                      {/* 추천 / 비추천 (좋아요 / 싫어요) 버튼 */}
+                      <div className="pt-6 flex items-center justify-center space-x-3">
                         <button
                           onClick={() => handleLike(activeDoc.id)}
                           disabled={likedIds.has(activeDoc.id)}
-                          className={`flex items-center space-x-2 px-6 py-2.5 rounded-full border transition shadow-sm active:scale-95 ${
+                          className={`flex items-center space-x-2 px-5 sm:px-6 py-2.5 rounded-full border transition shadow-sm active:scale-95 ${
                             likedIds.has(activeDoc.id)
                               ? 'bg-indigo-600/20 border-indigo-500/50 text-indigo-200 cursor-default'
-                              : 'bg-white/[0.03] border-white/[0.08] text-zinc-300 hover:border-white/[0.18] hover:text-white'
+                              : 'bg-white/[0.03] border-white/[0.08] text-zinc-300 hover:border-indigo-500/30 hover:text-white'
                           }`}
+                          title={likedIds.has(activeDoc.id) ? '이미 추천한 문서입니다' : '이 문서를 추천합니다'}
                         >
-                          <ThumbsUp className="w-4 h-4" />
+                          <ThumbsUp className="w-4 h-4 text-indigo-400" />
                           <span className="text-xs font-bold font-mono">
-                            {likedIds.has(activeDoc.id) ? '추천됨' : '문서 추천'} {activeDoc.likes}
+                            {likedIds.has(activeDoc.id) ? '추천됨' : '좋아요'} {activeDoc.likes}
+                          </span>
+                        </button>
+
+                        <button
+                          onClick={() => handleDislike(activeDoc.id)}
+                          disabled={dislikedIds.has(activeDoc.id)}
+                          className={`flex items-center space-x-2 px-5 sm:px-6 py-2.5 rounded-full border transition shadow-sm active:scale-95 ${
+                            dislikedIds.has(activeDoc.id)
+                              ? 'bg-rose-950/30 border-rose-500/50 text-rose-300 cursor-default'
+                              : 'bg-white/[0.03] border-white/[0.08] text-zinc-300 hover:border-rose-500/30 hover:text-rose-200'
+                          }`}
+                          title={dislikedIds.has(activeDoc.id) ? '이미 비추천한 문서입니다' : '이 문서를 비추천합니다'}
+                        >
+                          <ThumbsDown className="w-4 h-4 text-rose-400" />
+                          <span className="text-xs font-bold font-mono">
+                            {dislikedIds.has(activeDoc.id) ? '비추천됨' : '싫어요'} {activeDoc.dislikes || 0}
                           </span>
                         </button>
                       </div>
@@ -1177,40 +1214,58 @@ export default function FreeWikiPage() {
                       </p>
                     </div>
 
-                    {/* 액션 버튼 */}
-                    <div className="flex flex-col items-center gap-1.5 shrink-0">
-                      <button
-                        onClick={() => handleLike(doc.id)}
-                        disabled={likedIds.has(doc.id)}
-                        className={`flex flex-col items-center justify-center p-2.5 rounded-xl border transition active:scale-95 ${
-                          likedIds.has(doc.id)
-                            ? 'bg-violet-600/20 border-violet-500/40 text-violet-300 cursor-default'
-                            : 'bg-white/[0.02] border-white/[0.06] hover:border-white/[0.15] hover:bg-white/[0.05] text-zinc-400 hover:text-white'
-                        }`}
-                        title={likedIds.has(doc.id) ? '이미 추천한 게시글' : '추천하기'}
-                      >
-                        <ThumbsUp className="w-4 h-4 mb-1" />
-                        <span className="text-xs font-bold font-mono">{doc.likes}</span>
-                      </button>
-
-                      <button
-                        onClick={() => setReportTarget({ id: doc.id, type: 'post', title: doc.title })}
-                        className="p-2 rounded-xl bg-rose-950/20 border border-rose-500/25 hover:bg-rose-950/50 text-rose-400 hover:text-rose-200 transition"
-                        title="게시글 신고하기"
-                      >
-                        <AlertTriangle className="w-3.5 h-3.5" />
-                      </button>
-
-                      {(isDeveloper || doc.author === user.name || isMyDoc(doc.id)) && (
+                    {/* 액션 버튼: 좋아요 / 싫어요 / 신고 / 삭제 */}
+                    <div className="flex flex-col items-end gap-1.5 shrink-0">
+                      <div className="flex items-center gap-1.5">
                         <button
-                          onClick={() => handleDelete(doc.id, doc.title)}
-                          disabled={deletingId === doc.id}
-                          className="p-2 rounded-xl bg-white/[0.04] hover:bg-rose-950/40 text-zinc-400 hover:text-rose-300 transition"
-                          title="게시글 삭제"
+                          onClick={() => handleLike(doc.id)}
+                          disabled={likedIds.has(doc.id)}
+                          className={`flex items-center space-x-1 px-2.5 py-1.5 rounded-xl border transition active:scale-95 ${
+                            likedIds.has(doc.id)
+                              ? 'bg-violet-600/20 border-violet-500/40 text-violet-300 cursor-default'
+                              : 'bg-white/[0.02] border-white/[0.06] hover:border-violet-500/30 hover:bg-white/[0.05] text-zinc-400 hover:text-white'
+                          }`}
+                          title={likedIds.has(doc.id) ? '이미 추천한 게시글' : '좋아요'}
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
+                          <ThumbsUp className="w-3.5 h-3.5 text-violet-400" />
+                          <span className="text-xs font-bold font-mono">{doc.likes}</span>
                         </button>
-                      )}
+
+                        <button
+                          onClick={() => handleDislike(doc.id)}
+                          disabled={dislikedIds.has(doc.id)}
+                          className={`flex items-center space-x-1 px-2.5 py-1.5 rounded-xl border transition active:scale-95 ${
+                            dislikedIds.has(doc.id)
+                              ? 'bg-rose-950/30 border-rose-500/40 text-rose-300 cursor-default'
+                              : 'bg-white/[0.02] border-white/[0.06] hover:border-rose-500/30 hover:bg-white/[0.05] text-zinc-400 hover:text-rose-200'
+                          }`}
+                          title={dislikedIds.has(doc.id) ? '이미 비추천한 게시글' : '싫어요'}
+                        >
+                          <ThumbsDown className="w-3.5 h-3.5 text-rose-400" />
+                          <span className="text-xs font-bold font-mono">{doc.dislikes || 0}</span>
+                        </button>
+                      </div>
+
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => setReportTarget({ id: doc.id, type: 'post', title: doc.title })}
+                          className="p-1.5 rounded-xl bg-rose-950/20 border border-rose-500/25 hover:bg-rose-950/50 text-rose-400 hover:text-rose-200 transition"
+                          title="게시글 신고하기"
+                        >
+                          <AlertTriangle className="w-3.5 h-3.5" />
+                        </button>
+
+                        {(isDeveloper || doc.author === user.name || isMyDoc(doc.id)) && (
+                          <button
+                            onClick={() => handleDelete(doc.id, doc.title)}
+                            disabled={deletingId === doc.id}
+                            className="p-1.5 rounded-xl bg-white/[0.04] hover:bg-rose-950/40 text-zinc-400 hover:text-rose-300 transition"
+                            title="게시글 삭제"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
