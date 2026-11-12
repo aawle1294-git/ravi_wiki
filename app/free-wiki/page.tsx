@@ -25,6 +25,7 @@ import { useVersion } from '@/lib/version'
 import MarkdownEditor from '@/components/MarkdownEditor'
 import WikiMarkdownRenderer from '@/components/WikiMarkdownRenderer'
 import ReportModal from '@/components/ReportModal'
+import MindmapViewer from '@/components/MindmapViewer'
 import {
   BookOpen,
   MessageSquare,
@@ -90,6 +91,7 @@ export default function FreeWikiPage() {
   const [newComment, setNewComment] = useState('')
   const [commentAuthor, setCommentAuthor] = useState('')
   const [showToc, setShowToc] = useState(true)
+  const [showMindmap, setShowMindmap] = useState(false)
   const [copied, setCopied] = useState(false)
 
   // 위키 인라인 편집 상태
@@ -733,38 +735,59 @@ export default function FreeWikiPage() {
                         </div>
                       )}
 
-                      {/* 📑 나무위키 스타일 목차 (TOC) 박스 */}
-                      {toc.length > 0 && (
-                        <div className="mb-6 p-4 rounded-2xl bg-white/[0.03] border border-white/[0.08] max-w-sm">
-                          <div className="flex items-center justify-between mb-2 pb-1.5 border-b border-white/[0.06]">
-                            <span className="text-xs font-bold text-white flex items-center space-x-1.5">
-                              <List className="w-3.5 h-3.5 text-indigo-400" />
-                              <span>목차</span>
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => setShowToc(v => !v)}
-                              className="text-[10px] text-zinc-400 hover:text-white"
-                            >
-                              {showToc ? '[접기]' : '[펼치기]'}
-                            </button>
-                          </div>
-                          {showToc && (
-                            <ol className="space-y-1 text-xs text-zinc-300">
-                              {toc.map((item, idx) => (
-                                <li
-                                  key={idx}
-                                  style={{ paddingLeft: `${(item.level - 1) * 12}px` }}
-                                  className="hover:text-indigo-300 transition"
-                                >
-                                  <span className="font-mono text-indigo-400 font-semibold mr-1.5">{idx + 1}.</span>
-                                  <span>{item.text}</span>
-                                </li>
-                              ))}
-                            </ol>
-                          )}
+                      {/* 🧠 마인드맵 개요 보기 & 📑 나무위키 스타일 목차 (TOC) 박스 */}
+                      <div className="mb-6 space-y-4">
+                        <div className="flex items-center space-x-2">
+                          <button
+                            type="button"
+                            onClick={() => setShowMindmap(v => !v)}
+                            className={`inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition active:scale-95 ${
+                              showMindmap
+                                ? 'bg-indigo-600 text-white border-indigo-400 shadow-md shadow-indigo-500/20'
+                                : 'bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 border-indigo-500/30'
+                            }`}
+                          >
+                            <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+                            <span>{showMindmap ? '마인드맵 닫기' : '🧠 마인드맵으로 개요 보기'}</span>
+                          </button>
                         </div>
-                      )}
+
+                        {showMindmap && (
+                          <MindmapViewer markdown={activeDoc.content} title={activeDoc.title} />
+                        )}
+
+                        {toc.length > 0 && (
+                          <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.08] max-w-sm">
+                            <div className="flex items-center justify-between mb-2 pb-1.5 border-b border-white/[0.06]">
+                              <span className="text-xs font-bold text-white flex items-center space-x-1.5">
+                                <List className="w-3.5 h-3.5 text-indigo-400" />
+                                <span>목차</span>
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => setShowToc(v => !v)}
+                                className="text-[10px] text-zinc-400 hover:text-white"
+                              >
+                                {showToc ? '[접기]' : '[펼치기]'}
+                              </button>
+                            </div>
+                            {showToc && (
+                              <ol className="space-y-1 text-xs text-zinc-300">
+                                {toc.map((item, idx) => (
+                                  <li
+                                    key={idx}
+                                    style={{ paddingLeft: `${(item.level - 1) * 12}px` }}
+                                    className="hover:text-indigo-300 transition"
+                                  >
+                                    <span className="font-mono text-indigo-400 font-semibold mr-1.5">{idx + 1}.</span>
+                                    <span>{item.text}</span>
+                                  </li>
+                                ))}
+                              </ol>
+                            )}
+                          </div>
+                        )}
+                      </div>
 
                       {/* 본문 마크다운 렌더링 */}
                       <div className="pb-8 border-b border-white/[0.07] min-h-[160px]">

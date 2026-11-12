@@ -19,9 +19,11 @@ import {
   Columns2,
   Palette,
   Type,
-  ChevronDown
+  ChevronDown,
+  Sparkles
 } from 'lucide-react'
 import WikiMarkdownRenderer from './WikiMarkdownRenderer'
+import MindmapBuilder from './MindmapBuilder'
 
 interface MarkdownEditorProps {
   value: string
@@ -68,6 +70,7 @@ export default function MarkdownEditor({
   const [viewMode, setViewMode] = useState<'edit' | 'split' | 'preview'>('split')
   const [showColorPicker, setShowColorPicker] = useState(false)
   const [showFontPicker, setShowFontPicker] = useState(false)
+  const [showMindmapBuilder, setShowMindmapBuilder] = useState(false)
 
   // DB나 스토리지에서 넘어온 리터럴 \n 문자열이 있다면 실제 개행 문자로 정규화
   useEffect(() => {
@@ -294,29 +297,43 @@ export default function MarkdownEditor({
           </button>
         </div>
 
-        {/* 뷰 모드 전환 버튼 */}
-        <div className="flex items-center space-x-1 p-0.5 rounded-xl bg-black/40 border border-white/[0.08] text-xs">
-          <button type="button" onClick={() => setViewMode('edit')}
-            className={`flex items-center space-x-1 px-2.5 py-1 rounded-lg transition ${
-              viewMode === 'edit' ? 'bg-indigo-600 text-white font-semibold shadow-sm' : 'text-zinc-400 hover:text-zinc-200'
-            }`}>
-            <Edit3 className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">편집</span>
+        {/* 우측 도구: 🧠 마인드맵 글쓰기 + 뷰 모드 전환 버튼 */}
+        <div className="flex items-center space-x-2">
+          {/* 🧠 마인드맵 빌더 열기 버튼 */}
+          <button
+            type="button"
+            onClick={() => setShowMindmapBuilder(true)}
+            className="flex items-center space-x-1.5 px-3 py-1 rounded-xl bg-gradient-to-r from-indigo-600/30 to-violet-600/30 hover:from-indigo-600/50 hover:to-violet-600/50 border border-indigo-500/40 text-indigo-300 hover:text-white transition font-semibold active:scale-95 text-xs shadow-sm"
+            title="마인드맵으로 생각과 개요를 정리하여 글로 완성하기"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+            <span className="font-bold">🧠 마인드맵 글쓰기</span>
           </button>
-          <button type="button" onClick={() => setViewMode('split')}
-            className={`hidden md:flex items-center space-x-1 px-2.5 py-1 rounded-lg transition ${
-              viewMode === 'split' ? 'bg-indigo-600 text-white font-semibold shadow-sm' : 'text-zinc-400 hover:text-zinc-200'
-            }`}>
-            <Columns2 className="w-3.5 h-3.5" />
-            <span>실시간 분할</span>
-          </button>
-          <button type="button" onClick={() => setViewMode('preview')}
-            className={`flex items-center space-x-1 px-2.5 py-1 rounded-lg transition ${
-              viewMode === 'preview' ? 'bg-indigo-600 text-white font-semibold shadow-sm' : 'text-zinc-400 hover:text-zinc-200'
-            }`}>
-            <Eye className="w-3.5 h-3.5" />
-            <span>미리보기</span>
-          </button>
+
+          {/* 뷰 모드 전환 버튼 */}
+          <div className="flex items-center space-x-1 p-0.5 rounded-xl bg-black/40 border border-white/[0.08] text-xs">
+            <button type="button" onClick={() => setViewMode('edit')}
+              className={`flex items-center space-x-1 px-2.5 py-1 rounded-lg transition ${
+                viewMode === 'edit' ? 'bg-indigo-600 text-white font-semibold shadow-sm' : 'text-zinc-400 hover:text-zinc-200'
+              }`}>
+              <Edit3 className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">편집</span>
+            </button>
+            <button type="button" onClick={() => setViewMode('split')}
+              className={`hidden md:flex items-center space-x-1 px-2.5 py-1 rounded-lg transition ${
+                viewMode === 'split' ? 'bg-indigo-600 text-white font-semibold shadow-sm' : 'text-zinc-400 hover:text-zinc-200'
+              }`}>
+              <Columns2 className="w-3.5 h-3.5" />
+              <span>실시간 분할</span>
+            </button>
+            <button type="button" onClick={() => setViewMode('preview')}
+              className={`flex items-center space-x-1 px-2.5 py-1 rounded-lg transition ${
+                viewMode === 'preview' ? 'bg-indigo-600 text-white font-semibold shadow-sm' : 'text-zinc-400 hover:text-zinc-200'
+              }`}>
+              <Eye className="w-3.5 h-3.5" />
+              <span>미리보기</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -381,6 +398,18 @@ export default function MarkdownEditor({
           )}
         </div>
       </div>
+
+      {/* 🧠 마인드맵 글쓰기 빌더 모달 */}
+      {showMindmapBuilder && (
+        <MindmapBuilder
+          initialMarkdown={value}
+          onApplyMarkdown={(newMd) => {
+            onChange(newMd)
+            setShowMindmapBuilder(false)
+          }}
+          onClose={() => setShowMindmapBuilder(false)}
+        />
+      )}
     </div>
   )
 }
