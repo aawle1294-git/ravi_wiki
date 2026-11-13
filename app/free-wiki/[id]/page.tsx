@@ -10,7 +10,7 @@ import { useAuth } from '@/lib/auth'
 import WikiMarkdownRenderer from '@/components/WikiMarkdownRenderer'
 import MarkdownEditor from '@/components/MarkdownEditor'
 import ReportModal from '@/components/ReportModal'
-import MindmapViewer from '@/components/MindmapViewer'
+import MindmapViewer, { hasMindmapContent } from '@/components/MindmapViewer'
 import { 
   MessageSquare, 
   ThumbsUp, 
@@ -413,22 +413,24 @@ export default function FreeDocDetailPage() {
 
               {/* 📑 나무위키 스타일 목차 (Table of Contents) 박스 & 🧠 마인드맵 토글 */}
               <div className="mb-6 space-y-4">
-                <div className="flex items-center space-x-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowMindmap(v => !v)}
-                    className={`inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition active:scale-95 ${
-                      showMindmap
-                        ? 'bg-indigo-600 text-white border-indigo-400 shadow-md shadow-indigo-500/20'
-                        : 'bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 border-indigo-500/30'
-                    }`}
-                  >
-                    <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
-                    <span>{showMindmap ? '마인드맵 닫기' : '🧠 마인드맵으로 개요 보기'}</span>
-                  </button>
-                </div>
+                {hasMindmapContent(doc.content) && (
+                  <div className="flex items-center space-x-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowMindmap(v => !v)}
+                      className={`inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition active:scale-95 ${
+                        showMindmap
+                          ? 'bg-[#5865f2] text-white border-[#5865f2] shadow-md shadow-[#5865f2]/20'
+                          : 'bg-white/[0.04] text-zinc-400 border-white/[0.1] hover:bg-white/[0.08] hover:text-white'
+                      }`}
+                    >
+                      <Sparkles className={`w-3.5 h-3.5 ${showMindmap ? 'text-white' : 'text-zinc-400'}`} />
+                      <span>{showMindmap ? '마인드맵 닫기' : '🧠 마인드맵으로 개요 보기'}</span>
+                    </button>
+                  </div>
+                )}
 
-                {showMindmap && (
+                {showMindmap && hasMindmapContent(doc.content) && (
                   <MindmapViewer markdown={doc.content} title={doc.title} />
                 )}
 

@@ -22,6 +22,7 @@ import {
   Palette,
   X
 } from 'lucide-react'
+import { useTheme } from '@/lib/theme'
 
 export interface MindmapNode {
   id: string
@@ -201,12 +202,14 @@ export function mindmapToMarkdown(node: MindmapNode, level = 1): string {
 }
 
 // 마크다운 텍스트를 마인드맵 노드로 파싱하는 함수
-export function markdownToMindmap(markdown: string): MindmapNode {
-  const lines = (markdown || '').split('\n').filter(l => l.trim().length > 0)
+export function markdownToMindmap(markdown: string, fallbackIfEmpty = false): MindmapNode {
+  // HTML 주석 제거 (<!--subtitle:...-->, <!--dislikes:...-->)
+  const clean = (markdown || '').replace(/<!--[\s\S]*?-->/g, '').trim()
+  const lines = clean.split('\n').filter(l => l.trim().length > 0)
   const root: MindmapNode = {
     id: 'root-' + Date.now(),
-    text: '문서 개요 (마인드맵)',
-    color: '#818cf8',
+    text: '문서 개요',
+    color: '#5865f2',
     children: []
   }
 
@@ -252,9 +255,27 @@ export function markdownToMindmap(markdown: string): MindmapNode {
       continue
     }
 
-    // List item (- or 1.)
-    if (/^[-*+]\s+/.test(trimmed) || /^\d+\.\s+/.test(trimmed)) {
-      const listText = trimmed.replace(/^[-*+]\s+/, '').replace(/^\d+\.\s+/, '')
+    // H4
+    if (trimmed.startsWith('#### ')) {
+      const h4Node: MindmapNode = {
+        id: 'node-' + Math.random().toString(36).substr(2, 9),
+        text: trimmed.replace(/^####\s+/, ''),
+        children: []
+      }
+      if (currentH3) {
+        currentH3.children.push(h4Node)
+      } else if (currentH2) {
+        currentH2.children.push(h4Node)
+      } else {
+        root.children.push(h4Node)
+      }
+      continue
+    }
+
+    // List item (- or * or + or 1. or 1))
+    if (/^[-*+]\s+/.test(trimmed) || /^\d+[.)]\s+/.test(trimmed)) {
+      const listText = trimmed.replace(/^[-*+]\s+/, '').replace(/^\d+[.)]\s+/, '').trim()
+      if (!listText) continue
       const listNode: MindmapNode = {
         id: 'node-' + Math.random().toString(36).substr(2, 9),
         text: listText,
@@ -271,12 +292,12 @@ export function markdownToMindmap(markdown: string): MindmapNode {
     }
   }
 
-  // 만약 파싱된 자식이 아무것도 없으면 기본 템플릿 하나 반환
-  if (root.children.length === 0) {
+  // fallbackIfEmpty가 true일 때만 기본 템플릿 하나 반환 (빌더 모달용)
+  if (fallbackIfEmpty && root.children.length === 0) {
     root.children.push({
       id: 'sub-1',
       text: '주요 내용',
-      color: '#34d399',
+      color: '#5865f2',
       children: [
         { id: 'sub-1-1', text: '첫 번째 세부 사항', children: [] }
       ]
@@ -299,7 +320,7 @@ export default function MindmapBuilder({
 }: MindmapBuilderProps) {
   const [rootNode, setRootNode] = useState<MindmapNode>(() => {
     if (initialMarkdown.trim().length > 10) {
-      return markdownToMindmap(initialMarkdown)
+      return markdownToMindmap(initialMarkdown, true)
     }
     return TEMPLATES[0].data
   })
@@ -307,6 +328,8 @@ export default function MindmapBuilder({
   const [selectedNodeId, setSelectedNodeId] = useState<string>(rootNode.id)
   const [copied, setCopied] = useState(false)
   const [fullscreen, setFullscreen] = useState(false)
+  const { theme } = useTheme()
+  const isLight = theme === 'light'
 
   // 노드 재귀 탐색 및 수정 헬퍼
   const updateNode = (
@@ -453,17 +476,58 @@ export default function MindmapBuilder({
       return
     }
     if (confirm('현재 에디터의 마크다운 글을 분석하여 마인드맵으로 새로 변환하시겠습니까?')) {
-      const parsed = markdownToMindmap(initialMarkdown)
+      const parsed = markdownToMindmap(initialMarkdown, true)
       setRootNode(parsed)
       setSelectedNodeId(parsed.id)
     }
   }
 
-  // 재귀적 노드 렌더러
+  // 재귀적 노드 렌더러 — Notion & Discord 모던 스타일
   const renderNode = (node: MindmapNode, depth = 0, isLast = false) => {
     const isSelected = selectedNodeId === node.id
     const hasChildren = node.children.length > 0
     const isRoot = depth === 0
+    const branchColor = node.color || '#5865F2'
+
+    let nodeClass = ''
+    const nodeStyle: React.CSSProperties = {}
+
+    if (isRoot) {
+      nodeClass =
+        'px-5 py-3 rounded-xl font-bold text-sm sm:text-base shadow-lg transition-all border border-[#5865F2]/40'
+      nodeStyle.backgroundColor = '#5865F2'
+      nodeStyle.color = '#ffffff'
+    } else if (depth === 1) {
+      if (isLight) {
+        nodeClass =
+          'px-4 py-2 bg-white border border-slate-200/90 rounded-xl shadow-sm hover:shadow-md font-bold text-xs sm:text-sm transition-all'
+        nodeStyle.color = '#0f172a'
+      } else {
+        nodeClass =
+          'px-4 py-2 bg-[#2b2d31] border border-white/[0.08] rounded-xl hover:border-white/[0.18] font-bold text-xs sm:text-sm transition-all'
+        nodeStyle.color = '#f2f3f5'
+      }
+      nodeStyle.borderLeft = `4px solid ${branchColor}`
+    } else if (depth === 2) {
+      if (isLight) {
+        nodeClass =
+          'px-3.5 py-1.5 bg-slate-50 border border-slate-200/80 rounded-lg font-medium text-xs transition-all'
+        nodeStyle.color = '#334155'
+      } else {
+        nodeClass =
+          'px-3.5 py-1.5 bg-[#232428] border border-white/[0.06] rounded-lg font-medium text-xs transition-all'
+        nodeStyle.color = '#dbdee1'
+      }
+      nodeStyle.borderLeft = `2.5px solid ${branchColor}`
+    } else {
+      if (isLight) {
+        nodeClass = 'px-3 py-1 bg-white/70 border border-slate-200/60 rounded-md text-xs'
+        nodeStyle.color = '#64748b'
+      } else {
+        nodeClass = 'px-3 py-1 bg-white/[0.03] border border-white/[0.04] rounded-md text-xs'
+        nodeStyle.color = '#949ba4'
+      }
+    }
 
     return (
       <div key={node.id} className="relative flex items-start space-x-3 my-2.5">
@@ -471,16 +535,12 @@ export default function MindmapBuilder({
         {/* 노드 카드 본체 */}
         <div
           onClick={() => setSelectedNodeId(node.id)}
-          className={`group/node relative rounded-2xl transition-all duration-150 cursor-pointer shadow-md ${
-            isRoot
-              ? 'px-5 py-3.5 bg-gradient-to-r from-indigo-900/80 via-violet-900/80 to-purple-900/80 border-2 border-indigo-400 text-white font-extrabold text-base'
-              : depth === 1
-              ? 'px-4 py-2.5 bg-[#141724] border border-white/[0.15] text-zinc-100 font-bold text-sm'
-              : 'px-3.5 py-2 bg-[#0e1019] border border-white/[0.08] text-zinc-300 text-xs'
-          } ${
-            isSelected ? 'ring-2 ring-indigo-400 border-indigo-400 shadow-indigo-500/20' : 'hover:border-white/[0.25]'
+          className={`group/node relative rounded-xl transition-all duration-150 cursor-pointer shadow-sm ${nodeClass} ${
+            isSelected
+              ? 'ring-2 ring-[#5865F2] border-[#5865F2] shadow-[#5865F2]/20'
+              : 'hover:scale-[1.01]'
           }`}
-          style={node.color && !isRoot ? { borderLeftColor: node.color, borderLeftWidth: '4px' } : undefined}
+          style={nodeStyle}
         >
           <div className="flex items-center space-x-2">
             {/* 접기 / 펼치기 토글 */}
@@ -494,7 +554,7 @@ export default function MindmapBuilder({
                 className="p-0.5 rounded text-zinc-400 hover:text-white"
               >
                 {node.collapsed ? (
-                  <ChevronRight className="w-3.5 h-3.5 text-indigo-400" />
+                  <ChevronRight className="w-3.5 h-3.5 text-[#5865F2]" />
                 ) : (
                   <ChevronDown className="w-3.5 h-3.5 text-zinc-400" />
                 )}
@@ -506,13 +566,21 @@ export default function MindmapBuilder({
               type="text"
               value={node.text}
               onChange={e => handleEditText(node.id, e.target.value)}
-              className="bg-transparent border-0 outline-none text-inherit font-inherit min-w-[140px] max-w-[280px] focus:bg-white/[0.06] rounded px-1"
+              style={{ color: 'inherit' }}
+              className="bg-transparent border-0 outline-none font-inherit min-w-[140px] max-w-[280px] focus:bg-black/10 dark:focus:bg-white/[0.08] rounded px-1"
               placeholder="항목 내용 입력..."
             />
 
             {/* 자식 개수 뱃지 */}
             {hasChildren && node.collapsed && (
-              <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+              <span
+                className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded-full"
+                style={{
+                  backgroundColor: 'rgba(88, 101, 242, 0.15)',
+                  color: isLight ? '#4752c4' : '#8b98ff',
+                  border: '1px solid rgba(88, 101, 242, 0.3)',
+                }}
+              >
                 +{node.children.length}
               </span>
             )}
@@ -575,24 +643,52 @@ export default function MindmapBuilder({
   return (
     <div className={`fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 ${fullscreen ? 'p-0' : ''}`}>
       <div
-        className={`glass-panel rounded-3xl w-full border border-white/[0.12] shadow-2xl flex flex-col overflow-hidden text-zinc-100 ${
+        className={`rounded-3xl w-full border shadow-2xl flex flex-col overflow-hidden transition-colors ${
           fullscreen ? 'h-full rounded-none' : 'max-w-6xl max-h-[92vh] h-[850px]'
+        } ${
+          isLight
+            ? 'bg-white border-slate-200 text-slate-800'
+            : 'bg-[#1e1f22] border-white/[0.12] text-zinc-100'
         }`}
       >
         {/* 상단 헤더 */}
-        <div className="p-4 sm:p-5 border-b border-white/[0.08] flex items-center justify-between gap-3 bg-white/[0.02]">
+        <div
+          className={`p-4 sm:p-5 border-b flex items-center justify-between gap-3 ${
+            isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#2b2d31] border-white/[0.08]'
+          }`}
+        >
           <div className="flex items-center space-x-3">
-            <div className="p-2 rounded-2xl bg-indigo-500/20 border border-indigo-500/40 text-indigo-400 shadow-inner">
+            <div
+              className="p-2 rounded-2xl flex items-center justify-center"
+              style={{
+                backgroundColor: 'rgba(88, 101, 242, 0.15)',
+                color: '#5865F2',
+                border: '1px solid rgba(88, 101, 242, 0.3)',
+              }}
+            >
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base sm:text-lg font-extrabold text-white flex items-center space-x-2">
+              <h2
+                className="text-base sm:text-lg font-extrabold flex items-center space-x-2"
+                style={{ color: isLight ? '#0f172a' : '#ffffff' }}
+              >
                 <span>🧠 마인드맵 글쓰기 빌더</span>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                <span
+                  className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                  style={{
+                    backgroundColor: 'rgba(88, 101, 242, 0.15)',
+                    color: isLight ? '#4752c4' : '#8b98ff',
+                    border: '1px solid rgba(88, 101, 242, 0.3)',
+                  }}
+                >
                   Visual Mindmap
                 </span>
               </h2>
-              <p className="text-xs text-zinc-400">
+              <p
+                className="text-xs"
+                style={{ color: isLight ? '#64748b' : '#949ba4' }}
+              >
                 중심 주제에서 가지를 뻗어 생각을 정리하면, 서론-본론-결론이 갖춰진 마크다운 글로 자동 완성됩니다.
               </p>
             </div>
@@ -602,7 +698,11 @@ export default function MindmapBuilder({
             <button
               type="button"
               onClick={() => setFullscreen(v => !v)}
-              className="p-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-zinc-400 hover:text-white transition"
+              className={`p-2 rounded-xl transition ${
+                isLight
+                  ? 'bg-slate-200/60 hover:bg-slate-200 text-slate-600 hover:text-slate-900'
+                  : 'bg-white/[0.04] hover:bg-white/[0.08] text-zinc-400 hover:text-white'
+              }`}
               title={fullscreen ? '창 모드로 복귀' : '전체화면'}
             >
               {fullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
@@ -610,7 +710,11 @@ export default function MindmapBuilder({
             <button
               type="button"
               onClick={onClose}
-              className="p-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-zinc-400 hover:text-white transition"
+              className={`p-2 rounded-xl transition ${
+                isLight
+                  ? 'bg-slate-200/60 hover:bg-slate-200 text-slate-600 hover:text-slate-900'
+                  : 'bg-white/[0.04] hover:bg-white/[0.08] text-zinc-400 hover:text-white'
+              }`}
             >
               <X className="w-4 h-4" />
             </button>
@@ -618,9 +722,16 @@ export default function MindmapBuilder({
         </div>
 
         {/* 템플릿 & 도구 바 */}
-        <div className="px-4 py-2.5 bg-black/30 border-b border-white/[0.06] flex items-center justify-between gap-3 flex-wrap text-xs">
+        <div
+          className={`px-4 py-2.5 border-b flex items-center justify-between gap-3 flex-wrap text-xs ${
+            isLight ? 'bg-slate-100/60 border-slate-200' : 'bg-black/30 border-white/[0.06]'
+          }`}
+        >
           <div className="flex items-center space-x-1.5 overflow-x-auto pb-1 sm:pb-0">
-            <span className="text-zinc-500 text-[11px] font-bold mr-1 flex items-center space-x-1">
+            <span
+              className="text-[11px] font-bold mr-1 flex items-center space-x-1"
+              style={{ color: isLight ? '#64748b' : '#949ba4' }}
+            >
               <Layers className="w-3.5 h-3.5" />
               <span>템플릿:</span>
             </span>
@@ -631,9 +742,13 @@ export default function MindmapBuilder({
                   key={i}
                   type="button"
                   onClick={() => handleSelectTemplate(tpl.data)}
-                  className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-white/[0.04] hover:bg-indigo-600/20 hover:border-indigo-500/40 border border-white/[0.08] text-zinc-300 hover:text-white transition whitespace-nowrap active:scale-95"
+                  className={`inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border transition whitespace-nowrap active:scale-95 ${
+                    isLight
+                      ? 'bg-white hover:bg-slate-100 border-slate-200 text-slate-700 shadow-sm'
+                      : 'bg-white/[0.04] hover:bg-[#5865F2]/20 hover:border-[#5865F2]/40 border-white/[0.08] text-zinc-300 hover:text-white'
+                  }`}
                 >
-                  <Icon className="w-3.5 h-3.5 text-indigo-400" />
+                  <Icon className="w-3.5 h-3.5 text-[#5865F2]" />
                   <span>{tpl.label}</span>
                 </button>
               )
@@ -645,10 +760,14 @@ export default function MindmapBuilder({
               <button
                 type="button"
                 onClick={handleReimportFromMarkdown}
-                className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-zinc-300 text-xs transition"
+                className={`inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border text-xs transition ${
+                  isLight
+                    ? 'bg-white hover:bg-slate-100 border-slate-200 text-slate-700 shadow-sm'
+                    : 'bg-white/[0.04] hover:bg-white/[0.08] border-white/[0.08] text-zinc-300'
+                }`}
                 title="기존 에디터 글에서 마인드맵 새로 생성"
               >
-                <Upload className="w-3.5 h-3.5 text-emerald-400" />
+                <Upload className="w-3.5 h-3.5 text-[#23A55A]" />
                 <span>글에서 불러오기</span>
               </button>
             )}
@@ -659,15 +778,24 @@ export default function MindmapBuilder({
         <div className="flex-1 min-h-0 flex flex-col md:flex-row">
           
           {/* [좌측]: 대화형 마인드맵 캔버스 영역 */}
-          <div className="flex-1 min-h-0 p-5 sm:p-7 overflow-auto bg-[#0a0c13] relative border-r border-white/[0.08]">
+          <div
+            className="flex-1 min-h-0 p-5 sm:p-7 overflow-auto relative border-r transition-colors"
+            style={{
+              backgroundColor: isLight ? '#fbfbfa' : '#313338',
+              borderColor: isLight ? 'rgba(226, 232, 240, 0.9)' : 'rgba(255, 255, 255, 0.08)',
+            }}
+          >
             <div className="mb-4 flex items-center justify-between">
-              <div className="flex items-center space-x-2 text-xs font-semibold text-zinc-400">
+              <div
+                className="flex items-center space-x-2 text-xs font-semibold"
+                style={{ color: isLight ? '#64748b' : '#949ba4' }}
+              >
                 <span>🎯 노드를 클릭하여 글자 수정, 호버 시 [+] 버튼으로 가지를 뻗을 수 있습니다.</span>
               </div>
               <button
                 type="button"
                 onClick={() => handleAddChild(selectedNodeId)}
-                className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-sm transition active:scale-95"
+                className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-[#5865F2] hover:bg-[#4752c4] text-white font-bold text-xs shadow-sm transition active:scale-95"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>선택 노드에 가지 추가</span>
@@ -681,37 +809,69 @@ export default function MindmapBuilder({
           </div>
 
           {/* [우측]: 마크다운 실시간 변환 뷰어 */}
-          <div className="w-full md:w-96 shrink-0 flex flex-col bg-[#0e111a] border-t md:border-t-0 border-white/[0.08]">
-            <div className="p-3.5 border-b border-white/[0.07] flex items-center justify-between bg-white/[0.02]">
+          <div
+            className="w-full md:w-96 shrink-0 flex flex-col border-t md:border-t-0 transition-colors"
+            style={{
+              backgroundColor: isLight ? '#ffffff' : '#2b2d31',
+              borderColor: isLight ? 'rgba(226, 232, 240, 0.9)' : 'rgba(255, 255, 255, 0.08)',
+            }}
+          >
+            <div
+              className={`p-3.5 border-b flex items-center justify-between ${
+                isLight ? 'bg-slate-50 border-slate-200' : 'bg-white/[0.02] border-white/[0.07]'
+              }`}
+            >
               <div className="flex items-center space-x-2">
-                <FileText className="w-4 h-4 text-indigo-400" />
-                <span className="text-xs font-bold text-white">마크다운 본문 자동 생성</span>
+                <FileText className="w-4 h-4 text-[#5865F2]" />
+                <span
+                  className="text-xs font-bold"
+                  style={{ color: isLight ? '#0f172a' : '#ffffff' }}
+                >
+                  마크다운 본문 자동 생성
+                </span>
               </div>
               <button
                 type="button"
                 onClick={handleCopy}
-                className="flex items-center space-x-1 px-2.5 py-1 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-[11px] text-zinc-300 transition"
+                className={`flex items-center space-x-1 px-2.5 py-1 rounded-lg text-[11px] transition ${
+                  isLight
+                    ? 'bg-slate-200/70 hover:bg-slate-200 text-slate-700'
+                    : 'bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300'
+                }`}
               >
-                {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                {copied ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
                 <span>{copied ? '복사됨' : '복사'}</span>
               </button>
             </div>
 
-            <div className="flex-1 p-4 overflow-y-auto font-mono text-xs text-zinc-300 whitespace-pre-wrap leading-relaxed select-text bg-black/20">
+            <div
+              className="flex-1 p-4 overflow-y-auto font-mono text-xs whitespace-pre-wrap leading-relaxed select-text"
+              style={{
+                backgroundColor: isLight ? '#f8fafc' : 'rgba(0, 0, 0, 0.25)',
+                color: isLight ? '#334155' : '#dbdee1',
+              }}
+            >
               {currentMarkdown}
             </div>
 
             {/* 적용 액션 버튼 */}
-            <div className="p-4 border-t border-white/[0.08] bg-white/[0.01] space-y-2">
+            <div
+              className={`p-4 border-t space-y-2 ${
+                isLight ? 'bg-slate-50 border-slate-200' : 'bg-white/[0.01] border-white/[0.08]'
+              }`}
+            >
               <button
                 type="button"
                 onClick={handleApply}
-                className="w-full flex items-center justify-center space-x-2 py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white text-xs font-bold shadow-lg shadow-indigo-500/20 transition active:scale-95"
+                className="w-full flex items-center justify-center space-x-2 py-3 rounded-2xl bg-[#5865F2] hover:bg-[#4752c4] text-white text-xs font-bold shadow-lg shadow-[#5865F2]/25 transition active:scale-95"
               >
                 <Check className="w-4 h-4" />
                 <span>이 마인드맵으로 글 완성하기 (에디터에 적용)</span>
               </button>
-              <p className="text-[11px] text-center text-zinc-500">
+              <p
+                className="text-[11px] text-center"
+                style={{ color: isLight ? '#64748b' : '#949ba4' }}
+              >
                 클릭 시 작성 중인 글 에디터 본문에 마크다운으로 즉시 삽입됩니다.
               </p>
             </div>
@@ -721,3 +881,4 @@ export default function MindmapBuilder({
     </div>
   )
 }
+
