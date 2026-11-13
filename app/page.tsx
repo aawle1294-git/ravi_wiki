@@ -39,12 +39,68 @@ export default function HomePage() {
   const [isEditingSubtitle, setIsEditingSubtitle] = useState(false)
   const [tempSubtitle, setTempSubtitle] = useState('')
 
+  // 상단 윗설명 (뱃지) 설정 상태
+  const [topBadgeLeft, setTopBadgeLeft] = useState('마인크래프트 JE 1.21.x')
+  const [topBadgeRight, setTopBadgeRight] = useState('정통 RPG 라비서버')
+  const [isEditingTopBadge, setIsEditingTopBadge] = useState(false)
+  const [tempTopBadgeLeft, setTempTopBadgeLeft] = useState('')
+  const [tempTopBadgeRight, setTempTopBadgeRight] = useState('')
+
+  // 메인 타이틀 설정 상태
+  const [titleMain, setTitleMain] = useState('라비서버')
+  const [titleSub, setTitleSub] = useState('위키 & 커뮤니티')
+  const [isEditingTitle, setIsEditingTitle] = useState(false)
+  const [tempTitleMain, setTempTitleMain] = useState('')
+  const [tempTitleSub, setTempTitleSub] = useState('')
+
   useEffect(() => {
     const saved = localStorage.getItem('ravi_site_subtitle')
     if (saved) {
       setSubtitle(saved)
     }
+
+    const savedBadgeLeft = localStorage.getItem('ravi_site_topbadge_left')
+    if (savedBadgeLeft) setTopBadgeLeft(savedBadgeLeft)
+
+    const savedBadgeRight = localStorage.getItem('ravi_site_topbadge_right')
+    if (savedBadgeRight) setTopBadgeRight(savedBadgeRight)
+
+    const savedTitleMain = localStorage.getItem('ravi_site_title_main')
+    if (savedTitleMain) setTitleMain(savedTitleMain)
+
+    const savedTitleSub = localStorage.getItem('ravi_site_title_sub')
+    if (savedTitleSub) setTitleSub(savedTitleSub)
   }, [])
+
+  const startEditTopBadge = () => {
+    setTempTopBadgeLeft(topBadgeLeft)
+    setTempTopBadgeRight(topBadgeRight)
+    setIsEditingTopBadge(true)
+  }
+
+  const saveTopBadge = () => {
+    if (!tempTopBadgeLeft.trim() && !tempTopBadgeRight.trim()) return
+    setTopBadgeLeft(tempTopBadgeLeft.trim())
+    setTopBadgeRight(tempTopBadgeRight.trim())
+    localStorage.setItem('ravi_site_topbadge_left', tempTopBadgeLeft.trim())
+    localStorage.setItem('ravi_site_topbadge_right', tempTopBadgeRight.trim())
+    setIsEditingTopBadge(false)
+  }
+
+  const startEditTitle = () => {
+    setTempTitleMain(titleMain)
+    setTempTitleSub(titleSub)
+    setIsEditingTitle(true)
+  }
+
+  const saveTitle = () => {
+    if (!tempTitleMain.trim() && !tempTitleSub.trim()) return
+    setTitleMain(tempTitleMain.trim())
+    setTitleSub(tempTitleSub.trim())
+    localStorage.setItem('ravi_site_title_main', tempTitleMain.trim())
+    localStorage.setItem('ravi_site_title_sub', tempTitleSub.trim())
+    setIsEditingTitle(false)
+  }
 
   const startEditSubtitle = () => {
     setTempSubtitle(subtitle)
@@ -91,21 +147,159 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* 상단 뱃지: 서버 기본 정보 */}
-            <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.08] text-zinc-300 text-xs font-medium mb-6 backdrop-blur-md shadow-sm">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-              <span className="text-zinc-200 font-semibold">마인크래프트 JE 1.21.x</span>
-              <span className="text-zinc-600">·</span>
-              <span className="text-indigo-300">정통 RPG 라비서버</span>
-            </div>
+            {/* 상단 뱃지: 서버 기본 정보 / 윗설명 (개발자 인라인 설정 지원) */}
+            {isEditingTopBadge ? (
+              <div className="max-w-md mx-auto mb-6 p-4 rounded-2xl bg-black/60 border border-white/[0.15] shadow-xl text-left">
+                <div className="flex items-center justify-between mb-2.5">
+                  <span className="text-xs font-semibold text-indigo-300 flex items-center space-x-1">
+                    <Edit3 className="w-3.5 h-3.5" />
+                    <span>상단 윗설명 (뱃지) 설정</span>
+                  </span>
+                  <div className="flex items-center space-x-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setIsEditingTopBadge(false)}
+                      className="px-2.5 py-1 rounded-lg bg-white/[0.05] hover:bg-white/[0.1] text-zinc-400 text-xs font-medium"
+                    >
+                      취소
+                    </button>
+                    <button
+                      type="button"
+                      onClick={saveTopBadge}
+                      className="flex items-center space-x-1 px-3 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-sm"
+                    >
+                      <Save className="w-3 h-3" />
+                      <span>저장</span>
+                    </button>
+                  </div>
+                </div>
 
-            {/* 메인 타이틀 */}
-            <h1 className="text-4xl sm:text-6xl font-extrabold text-zinc-900 dark:text-white tracking-tight leading-[1.12] mb-5">
-              라비서버{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-violet-600 to-indigo-800 dark:from-zinc-100 dark:via-indigo-200 dark:to-zinc-400">
-                위키 & 커뮤니티
-              </span>
-            </h1>
+                <div className="space-y-2">
+                  <div>
+                    <label className="block text-[11px] font-medium text-zinc-400 mb-1">
+                      왼쪽 문구 (버전 / 플랫폼 등)
+                    </label>
+                    <input
+                      type="text"
+                      value={tempTopBadgeLeft}
+                      onChange={(e) => setTempTopBadgeLeft(e.target.value)}
+                      placeholder="예: 마인크래프트 JE 1.21.x"
+                      className="w-full px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/[0.1] text-xs text-zinc-100 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-medium text-zinc-400 mb-1">
+                      오른쪽 문구 (서버 소개 / 태그 등)
+                    </label>
+                    <input
+                      type="text"
+                      value={tempTopBadgeRight}
+                      onChange={(e) => setTempTopBadgeRight(e.target.value)}
+                      placeholder="예: 정통 RPG 라비서버"
+                      className="w-full px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/[0.1] text-xs text-zinc-100 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    />
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="relative group/topbadge inline-block mb-6">
+                <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.08] text-zinc-300 text-xs font-medium backdrop-blur-md shadow-sm">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <span className="text-zinc-200 font-semibold">{topBadgeLeft}</span>
+                  {topBadgeRight && (
+                    <>
+                      <span className="text-zinc-600">·</span>
+                      <span className="text-indigo-300">{topBadgeRight}</span>
+                    </>
+                  )}
+                </div>
+
+                {isDeveloper && (
+                  <button
+                    type="button"
+                    onClick={startEditTopBadge}
+                    className="opacity-60 hover:opacity-100 transition-opacity absolute -right-9 top-1/2 -translate-y-1/2 p-1.5 rounded-lg bg-indigo-500/15 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-500/30 shadow-sm"
+                    title="상단 윗설명 수정 (개발자 전용)"
+                  >
+                    <Edit3 className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* 메인 타이틀 (개발자 인라인 설정 지원) */}
+            {isEditingTitle ? (
+              <div className="max-w-md mx-auto mb-5 p-4 rounded-2xl bg-black/60 border border-white/[0.15] shadow-xl text-left">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-semibold text-indigo-300 flex items-center space-x-1">
+                    <Edit3 className="w-3.5 h-3.5" />
+                    <span>메인 타이틀 설정</span>
+                  </span>
+                  <div className="flex items-center space-x-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setIsEditingTitle(false)}
+                      className="px-2.5 py-1 rounded-lg bg-white/[0.05] hover:bg-white/[0.1] text-zinc-400 text-xs font-medium"
+                    >
+                      취소
+                    </button>
+                    <button
+                      type="button"
+                      onClick={saveTitle}
+                      className="flex items-center space-x-1 px-3 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-sm"
+                    >
+                      <Save className="w-3 h-3" />
+                      <span>저장</span>
+                    </button>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div>
+                    <label className="block text-[11px] font-medium text-zinc-400 mb-1">
+                      메인 서버 이름
+                    </label>
+                    <input
+                      type="text"
+                      value={tempTitleMain}
+                      onChange={(e) => setTempTitleMain(e.target.value)}
+                      placeholder="기본 이름 (예: 라비서버)"
+                      className="w-full px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/[0.1] text-xs text-zinc-100 focus:outline-none focus:ring-1 focus:ring-indigo-500 font-bold"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-medium text-zinc-400 mb-1">
+                      강조 문구 (그라데이션)
+                    </label>
+                    <input
+                      type="text"
+                      value={tempTitleSub}
+                      onChange={(e) => setTempTitleSub(e.target.value)}
+                      placeholder="강조 문구 (예: 위키 & 커뮤니티)"
+                      className="w-full px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/[0.1] text-xs text-zinc-100 focus:outline-none focus:ring-1 focus:ring-indigo-500 font-bold"
+                    />
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="relative group/title inline-block mb-5">
+                <h1 className="text-4xl sm:text-6xl font-extrabold text-zinc-900 dark:text-white tracking-tight leading-[1.12]">
+                  {titleMain}{' '}
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-violet-600 to-indigo-800 dark:from-zinc-100 dark:via-indigo-200 dark:to-zinc-400">
+                    {titleSub}
+                  </span>
+                </h1>
+                {isDeveloper && (
+                  <button
+                    type="button"
+                    onClick={startEditTitle}
+                    className="opacity-0 group-hover/title:opacity-100 transition-opacity absolute -right-9 top-1/2 -translate-y-1/2 p-1.5 rounded-lg bg-indigo-500/15 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-500/30 shadow-sm"
+                    title="메인 타이틀 수정 (개발자 전용)"
+                  >
+                    <Edit3 className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+            )}
             
             {/* 서브 카피 (부제목) - 개발자 인라인 설정 지원 */}
             {isEditingSubtitle ? (
