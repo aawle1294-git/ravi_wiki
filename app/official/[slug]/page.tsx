@@ -108,7 +108,7 @@ export default function OfficialDocDetailPage() {
     <div className="min-h-screen flex flex-col text-zinc-900 dark:text-zinc-100">
       <Navbar />
 
-      <main className="max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
+      <main className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
         
         {/* 상단 브레드크럼 및 상태 바 */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/[0.07] mb-7">
@@ -139,7 +139,7 @@ export default function OfficialDocDetailPage() {
                     <button
                       onClick={handleDelete}
                       disabled={isDeleting}
-                      className="flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-rose-950/30 border border-rose-500/30 hover:bg-rose-950/50 hover:border-rose-500/60 text-rose-300 text-xs font-semibold transition active:scale-95 disabled:opacity-50"
+                      className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full bg-rose-950/30 border border-rose-500/30 hover:bg-rose-950/50 hover:border-rose-500/60 text-rose-300 text-xs font-semibold transition active:scale-95 disabled:opacity-50"
                       title="공식 문서 영구 삭제"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -164,12 +164,12 @@ export default function OfficialDocDetailPage() {
           </div>
         )}
 
-        {/* 2단 그리드: 좌측 공식 목차 + 우측 본문/편집창 */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        {/* 2단 와이드 레이아웃: 좌측 컴팩트 목차 + 우측 확장형 와이드 본문 */}
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 items-start">
           
           {/* 좌측 사이드바 */}
-          <aside className="hidden lg:block lg:col-span-1 space-y-4">
-            <div className="glass-panel rounded-2xl p-4 sticky top-24">
+          <aside className="hidden lg:block w-72 shrink-0 space-y-4 sticky top-24">
+            <div className="glass-panel rounded-2xl p-4">
               <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-3 flex items-center space-x-1.5">
                 <BookOpen className="w-3.5 h-3.5 text-indigo-400" />
                 <span>공식 가이드 목록</span>
@@ -212,8 +212,8 @@ export default function OfficialDocDetailPage() {
             </div>
           </aside>
 
-          {/* 본문 영역 */}
-          <article className="lg:col-span-3 min-w-0 w-full">
+          {/* 본문 영역 (와이드 확장형 본문 카드) */}
+          <article className="flex-1 min-w-0 w-full">
             {isEditing ? (
               /* 개발자 전용 편집 폼 */
               <form onSubmit={handleSave} className="glass-panel border-indigo-500/40 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-5">

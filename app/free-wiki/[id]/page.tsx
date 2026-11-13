@@ -237,7 +237,7 @@ export default function FreeDocDetailPage() {
     <div className="min-h-screen flex flex-col text-zinc-900 dark:text-zinc-100">
       <Navbar />
 
-      <main className="max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
+      <main className="max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
         
         {/* 상단 브레드크럼 및 공유/수정/삭제 버튼 */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-white/[0.07] mb-6">

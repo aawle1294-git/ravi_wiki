@@ -96,7 +96,7 @@ export default function NewOfficialDocPage() {
     <div className="min-h-screen flex flex-col text-zinc-900 dark:text-zinc-100">
       <Navbar />
 
-      <main className="max-w-5xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-1">
+      <main className="max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-1">
         
         {/* 상단 바 */}
         <div className="flex items-center justify-between mb-8 pb-4 border-b border-white/[0.07]">

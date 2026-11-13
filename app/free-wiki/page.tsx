@@ -442,7 +442,7 @@ export default function FreeWikiPage() {
     <div className="min-h-screen flex flex-col text-zinc-900 dark:text-zinc-100">
       <Navbar />
 
-      <main className="max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-9 flex-1 space-y-14">
+      <main className="max-w-[1600px] w-full mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-9 flex-1 space-y-14">
 
         {/* ============================================================ */}
         {/* 1. 상단: 📖 라비 자유 위키 (나무위키 스타일 시스템)            */}

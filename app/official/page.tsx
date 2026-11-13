@@ -31,7 +31,7 @@ export default function OfficialWikiIndexPage() {
     <div className="min-h-screen flex flex-col text-zinc-900 dark:text-zinc-100">
       <Navbar />
 
-      <main className="max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-1">
+      <main className="max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-1">
         
         {/* 상단 헤더 */}
         <div className="glass-panel rounded-3xl p-6 sm:p-9 mb-9 shadow-xl relative overflow-hidden">
