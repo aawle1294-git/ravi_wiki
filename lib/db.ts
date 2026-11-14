@@ -230,6 +230,7 @@ export async function getFreeDocs(): Promise<FreeDoc[]> {
         return data
           .filter((d: any) => 
             d.category !== '__DELETED__' && 
+            !d.category?.startsWith('__') &&
             !deletedIds.includes(d.id) &&
             !d.title?.startsWith('[삭제') &&
             !d.title?.startsWith('[정리')
@@ -280,6 +281,7 @@ export async function getFreeDocs(): Promise<FreeDoc[]> {
         return parsed
           .filter((d: FreeDoc) => 
             d.category !== '__DELETED__' && 
+            !d.category?.startsWith('__') &&
             !deletedIds.includes(d.id) &&
             !d.title?.startsWith('[삭제') &&
             !d.title?.startsWith('[정리')

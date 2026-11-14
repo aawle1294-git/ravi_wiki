@@ -10,10 +10,27 @@ export interface UserSession {
   avatar?: string
 }
 
+export interface AuthResult {
+  success: boolean
+  message?: string
+  notRegistered?: boolean
+}
+
+export interface NicknameStatus {
+  exists: boolean
+  nickname?: string
+  avatar?: string
+  registeredAt?: string
+  isReserved?: boolean
+  message?: string
+}
+
 interface AuthContextType {
   user: UserSession
   loginAsDeveloper: (password: string) => Promise<boolean>
-  loginAsPlayer: (nickname: string) => boolean
+  loginAsPlayer: (nickname: string, password: string) => Promise<AuthResult>
+  registerPlayer: (nickname: string, password: string) => Promise<AuthResult>
+  checkNicknameStatus: (nickname: string) => Promise<NicknameStatus>
   logout: () => void
   isDeveloper: boolean
   isPlayer: boolean
@@ -31,15 +48,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const savedRole = localStorage.getItem('ravi_user_role') as UserRole
     const savedName = localStorage.getItem('ravi_user_name')
+    const savedAvatar = localStorage.getItem('ravi_user_avatar')
 
     if (savedRole === 'developer') {
-      setUser({ role: 'developer', name: savedName || '서버 개발자' })
+      setUser({
+        role: 'developer',
+        name: savedName || '서버 개발자',
+        avatar: savedAvatar || '/logo.png'
+      })
     } else if (savedRole === 'player' && savedName) {
-      setUser({ role: 'player', name: savedName })
+      setUser({
+        role: 'player',
+        name: savedName,
+        avatar: savedAvatar || `https://mc-heads.net/avatar/${encodeURIComponent(savedName)}/32`
+      })
     }
   }, [])
 
-  // 🛠️ 개발자 로그인 (보안: 클라이언트 번들에 암호를 노출하지 않고 서버 API로 검증)
+  // 🛠️ 개발자 로그인 (서버 API 검증)
   const loginAsDeveloper = async (password: string): Promise<boolean> => {
     try {
       const res = await fetch('/api/auth/verify-dev', {
@@ -49,10 +75,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       })
       const data = await res.json()
       if (data.success) {
-        const devSession: UserSession = { role: 'developer', name: '서버 개발자' }
+        const devSession: UserSession = {
+          role: 'developer',
+          name: '서버 개발자',
+          avatar: '/logo.png'
+        }
         setUser(devSession)
         localStorage.setItem('ravi_user_role', 'developer')
         localStorage.setItem('ravi_user_name', '서버 개발자')
+        localStorage.setItem('ravi_user_avatar', '/logo.png')
         return true
       }
       return false
@@ -61,16 +92,112 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  // 🎮 플레이어 로그인 (닉네임 입력)
-  const loginAsPlayer = (nickname: string): boolean => {
-    if (nickname.trim()) {
-      const playerSession: UserSession = { role: 'player', name: nickname.trim() }
-      setUser(playerSession)
-      localStorage.setItem('ravi_user_role', 'player')
-      localStorage.setItem('ravi_user_name', nickname.trim())
-      return true
+  // 🔍 마인크래프트 닉네임 등록 여부 확인
+  const checkNicknameStatus = async (nickname: string): Promise<NicknameStatus> => {
+    try {
+      if (!nickname.trim()) return { exists: false }
+      const res = await fetch(`/api/auth/player?nickname=${encodeURIComponent(nickname.trim())}`)
+      const data = await res.json()
+      return {
+        exists: Boolean(data.exists),
+        nickname: data.nickname,
+        avatar: data.avatar,
+        registeredAt: data.registeredAt,
+        isReserved: data.isReserved,
+        message: data.message
+      }
+    } catch {
+      return { exists: false }
     }
-    return false
+  }
+
+  // 🎮 마인크래프트 닉네임 플레이어 로그인 (비밀번호 검증)
+  const loginAsPlayer = async (nickname: string, password: string): Promise<AuthResult> => {
+    try {
+      if (!nickname.trim()) {
+        return { success: false, message: '마인크래프트 닉네임을 입력해주세요.' }
+      }
+      if (!password || password.length < 4) {
+        return { success: false, message: '비밀번호는 최소 4자 이상이어야 합니다.' }
+      }
+
+      const res = await fetch('/api/auth/player', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'login',
+          nickname: nickname.trim(),
+          password
+        }),
+      })
+
+      const data = await res.json()
+
+      if (data.success) {
+        const playerSession: UserSession = {
+          role: 'player',
+          name: data.nickname || nickname.trim(),
+          avatar: data.avatar || `https://mc-heads.net/avatar/${encodeURIComponent(nickname.trim())}/32`
+        }
+        setUser(playerSession)
+        localStorage.setItem('ravi_user_role', 'player')
+        localStorage.setItem('ravi_user_name', playerSession.name)
+        localStorage.setItem('ravi_user_avatar', playerSession.avatar || '')
+        return { success: true, message: data.message }
+      }
+
+      return {
+        success: false,
+        message: data.error || '로그인에 실패했습니다.',
+        notRegistered: Boolean(data.notRegistered)
+      }
+    } catch (e: any) {
+      return { success: false, message: e.message || '네트워크 오류가 발생했습니다.' }
+    }
+  }
+
+  // ✨ 신규 마인크래프트 닉네임 등록 (최초 비밀번호 설정)
+  const registerPlayer = async (nickname: string, password: string): Promise<AuthResult> => {
+    try {
+      if (!nickname.trim()) {
+        return { success: false, message: '마인크래프트 닉네임을 입력해주세요.' }
+      }
+      if (!password || password.length < 4) {
+        return { success: false, message: '비밀번호는 최소 4자 이상이어야 합니다.' }
+      }
+
+      const res = await fetch('/api/auth/player', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'register',
+          nickname: nickname.trim(),
+          password
+        }),
+      })
+
+      const data = await res.json()
+
+      if (data.success) {
+        const playerSession: UserSession = {
+          role: 'player',
+          name: data.nickname || nickname.trim(),
+          avatar: data.avatar || `https://mc-heads.net/avatar/${encodeURIComponent(nickname.trim())}/32`
+        }
+        setUser(playerSession)
+        localStorage.setItem('ravi_user_role', 'player')
+        localStorage.setItem('ravi_user_name', playerSession.name)
+        localStorage.setItem('ravi_user_avatar', playerSession.avatar || '')
+        return { success: true, message: data.message }
+      }
+
+      return {
+        success: false,
+        message: data.error || '닉네임 등록에 실패했습니다.'
+      }
+    } catch (e: any) {
+      return { success: false, message: e.message || '네트워크 오류가 발생했습니다.' }
+    }
   }
 
   // 🚪 로그아웃
@@ -78,6 +205,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser({ role: 'guest', name: '방문자' })
     localStorage.removeItem('ravi_user_role')
     localStorage.removeItem('ravi_user_name')
+    localStorage.removeItem('ravi_user_avatar')
   }
 
   return (
@@ -86,6 +214,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user,
         loginAsDeveloper,
         loginAsPlayer,
+        registerPlayer,
+        checkNicknameStatus,
         logout,
         isDeveloper: user.role === 'developer',
         isPlayer: user.role === 'player' || user.role === 'developer',

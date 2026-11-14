@@ -32,7 +32,7 @@ import VersionModal from './VersionModal'
 
 export default function Navbar() {
   const pathname = usePathname()
-  const { user, loginAsDeveloper, loginAsPlayer, logout } = useAuth()
+  const { user, loginAsDeveloper, loginAsPlayer, registerPlayer, checkNicknameStatus, logout } = useAuth()
   const { theme, toggleTheme } = useTheme()
   const { selectedVersion, activeVer } = useVersion()
   
@@ -41,11 +41,49 @@ export default function Navbar() {
   const [showReportsModal, setShowReportsModal] = useState(false)
   const [showVersionModal, setShowVersionModal] = useState(false)
   const [pendingReportsCount, setPendingReportsCount] = useState(0)
-  const [loginTab, setLoginTab] = useState<'developer' | 'player'>('developer')
+  const [loginTab, setLoginTab] = useState<'developer' | 'player'>('player')
   const [devPassword, setDevPassword] = useState('')
   const [playerNickname, setPlayerNickname] = useState('')
+  const [playerPassword, setPlayerPassword] = useState('')
+  const [playerPasswordConfirm, setPlayerPasswordConfirm] = useState('')
+  const [playerAuthMode, setPlayerAuthMode] = useState<'login' | 'register'>('login')
+  const [isCheckingNick, setIsCheckingNick] = useState(false)
+  const [nickStatus, setNickStatus] = useState<{
+    checked: boolean
+    exists: boolean
+    isReserved?: boolean
+    message?: string
+  } | null>(null)
   const [errorMsg, setErrorMsg] = useState('')
   const [isVerifying, setIsVerifying] = useState(false)
+
+  // 마인크래프트 닉네임 입력 시 등록 여부 자동 확인 (디바운스)
+  useEffect(() => {
+    const trimmed = playerNickname.trim()
+    if (!trimmed || trimmed.length < 2) {
+      setNickStatus(null)
+      return
+    }
+
+    const timer = setTimeout(async () => {
+      setIsCheckingNick(true)
+      const res = await checkNicknameStatus(trimmed)
+      setIsCheckingNick(false)
+      setNickStatus({
+        checked: true,
+        exists: res.exists,
+        isReserved: res.isReserved,
+        message: res.message
+      })
+      if (res.exists) {
+        setPlayerAuthMode('login')
+      } else if (!res.isReserved) {
+        setPlayerAuthMode('register')
+      }
+    }, 400)
+
+    return () => clearTimeout(timer)
+  }, [playerNickname])
 
   const loadPendingReports = async () => {
     try {
@@ -84,16 +122,56 @@ export default function Navbar() {
     }
   }
 
-  const handlePlayerLogin = (e: React.FormEvent) => {
+  const handlePlayerLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setErrorMsg('')
-    if (!playerNickname.trim()) {
+    const trimmed = playerNickname.trim()
+
+    if (!trimmed) {
       setErrorMsg('마인크래프트 닉네임을 입력해주세요.')
       return
     }
-    loginAsPlayer(playerNickname.trim())
-    setShowLoginModal(false)
-    setPlayerNickname('')
+
+    if (!playerPassword || playerPassword.length < 4) {
+      setErrorMsg('비밀번호는 최소 4자 이상 입력해주세요.')
+      return
+    }
+
+    setIsVerifying(true)
+
+    if (playerAuthMode === 'register') {
+      if (playerPassword !== playerPasswordConfirm) {
+        setIsVerifying(false)
+        setErrorMsg('비밀번호와 비밀번호 확인이 일치하지 않습니다.')
+        return
+      }
+
+      const res = await registerPlayer(trimmed, playerPassword)
+      setIsVerifying(false)
+      if (res.success) {
+        setShowLoginModal(false)
+        setPlayerNickname('')
+        setPlayerPassword('')
+        setPlayerPasswordConfirm('')
+        alert(`✨ '${trimmed}' 닉네임이 성공적으로 등록되었습니다!\n이제 설정하신 비밀번호를 통해 나만 이 닉네임으로 로그인할 수 있습니다.`)
+      } else {
+        setErrorMsg(res.message || '등록 중 오류가 발생했습니다.')
+      }
+    } else {
+      const res = await loginAsPlayer(trimmed, playerPassword)
+      setIsVerifying(false)
+      if (res.success) {
+        setShowLoginModal(false)
+        setPlayerNickname('')
+        setPlayerPassword('')
+        setPlayerPasswordConfirm('')
+      } else {
+        if (res.notRegistered) {
+          setPlayerAuthMode('register')
+        }
+        setErrorMsg(res.message || '로그인에 실패했습니다.')
+      }
+    }
   }
 
   return (
@@ -252,8 +330,15 @@ export default function Navbar() {
               </div>
             ) : user.role === 'player' ? (
               <div className="flex items-center space-x-1.5 bg-white/[0.04] border border-white/[0.08] px-2.5 py-1.5 rounded-full text-xs font-semibold text-zinc-200 whitespace-nowrap shrink-0">
-                <UserCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span className="whitespace-nowrap text-[11px] truncate max-w-[80px]">{user.name}</span>
+                <img
+                  src={user.avatar || `https://mc-heads.net/avatar/${encodeURIComponent(user.name)}/24`}
+                  alt={user.name}
+                  className="w-4 h-4 rounded object-cover shrink-0"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLElement).style.display = 'none'
+                  }}
+                />
+                <span className="whitespace-nowrap text-[11px] truncate max-w-[90px]">{user.name}</span>
                 <button
                   onClick={logout}
                   className="ml-1 text-zinc-400 hover:text-rose-400 transition"
@@ -396,36 +481,160 @@ export default function Navbar() {
                 </button>
               </form>
             ) : (
-              /* 2. 플레이어 로그인 폼 */
+              /* 2. 플레이어 마인크래프트 닉네임 로그인 & 등록 폼 */
               <form onSubmit={handlePlayerLogin} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-semibold text-indigo-300 mb-1.5">
-                    마인크래프트 닉네임
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="인게임 닉네임 (예: Steve, 라비용사)"
-                    value={playerNickname}
-                    onChange={(e) => setPlayerNickname(e.target.value)}
-                    required
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.1] text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/60"
-                  />
-                  <p className="text-[11px] text-zinc-400 mt-2 leading-relaxed">
-                    🎮 닉네임만 입력하면 별도 가입 없이 자유 게시판 작성 및 댓글 소통이 가능합니다.
-                  </p>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-xs font-semibold text-indigo-300">
+                      마인크래프트 닉네임
+                    </label>
+                    <span className="text-[10px] text-zinc-500">
+                      인게임 아이디
+                    </span>
+                  </div>
+
+                  <div className="flex items-center space-x-2.5">
+                    <div className="w-10 h-10 rounded-xl bg-black/40 border border-white/[0.1] flex items-center justify-center overflow-hidden shrink-0 shadow-inner">
+                      {playerNickname.trim() ? (
+                        <img
+                          src={`https://mc-heads.net/avatar/${encodeURIComponent(playerNickname.trim())}/40`}
+                          alt=""
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.currentTarget as HTMLElement).style.display = 'none'
+                          }}
+                        />
+                      ) : (
+                        <UserCheck className="w-5 h-5 text-zinc-600" />
+                      )}
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="마크 닉네임 (예: Steve, 라비용사)"
+                      value={playerNickname}
+                      onChange={(e) => setPlayerNickname(e.target.value)}
+                      required
+                      className="flex-1 px-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.1] text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/60"
+                    />
+                  </div>
+
+                  {/* 닉네임 상태 안내 뱃지 */}
+                  <div className="mt-2 min-h-[22px]">
+                    {isCheckingNick ? (
+                      <p className="text-[11px] text-zinc-400 animate-pulse">
+                        🔍 닉네임 등록 여부 확인 중...
+                      </p>
+                    ) : nickStatus?.isReserved ? (
+                      <p className="text-[11px] text-rose-400 font-medium">
+                        ⛔ 관리자 및 예약어 닉네임은 사용할 수 없습니다.
+                      </p>
+                    ) : nickStatus?.exists ? (
+                      <div className="flex items-center justify-between text-[11px]">
+                        <span className="text-emerald-400 font-medium">
+                          🔒 등록된 닉네임 (본인 비밀번호로 로그인)
+                        </span>
+                        <span className="text-[10px] text-zinc-500 font-mono">기존 등록자</span>
+                      </div>
+                    ) : nickStatus?.checked ? (
+                      <div className="flex items-center justify-between text-[11px]">
+                        <span className="text-indigo-300 font-medium">
+                          ✨ 신규 닉네임 (비밀번호 설정 후 나만의 닉네임으로 등록)
+                        </span>
+                        <span className="text-[10px] text-indigo-400 font-mono">신규 등록</span>
+                      </div>
+                    ) : (
+                      <p className="text-[11px] text-zinc-400">
+                        🎮 마인크래프트 인게임 닉네임을 입력해주세요.
+                      </p>
+                    )}
+                  </div>
                 </div>
 
+                {/* 모드 전환 토글 (로그인 vs 신규 등록) */}
+                <div className="grid grid-cols-2 gap-1 bg-white/[0.03] p-1 rounded-xl border border-white/[0.06] text-xs">
+                  <button
+                    type="button"
+                    onClick={() => { setPlayerAuthMode('login'); setErrorMsg('') }}
+                    className={`py-1.5 rounded-lg font-medium transition ${
+                      playerAuthMode === 'login'
+                        ? 'bg-indigo-600 text-white font-bold shadow-sm'
+                        : 'text-zinc-400 hover:text-white'
+                    }`}
+                  >
+                    기존 닉네임 로그인
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setPlayerAuthMode('register'); setErrorMsg('') }}
+                    className={`py-1.5 rounded-lg font-medium transition ${
+                      playerAuthMode === 'register'
+                        ? 'bg-indigo-600 text-white font-bold shadow-sm'
+                        : 'text-zinc-400 hover:text-white'
+                    }`}
+                  >
+                    신규 닉네임 등록
+                  </button>
+                </div>
+
+                {/* 비밀번호 입력 */}
+                <div>
+                  <label className="block text-xs font-semibold text-indigo-300 mb-1.5">
+                    {playerAuthMode === 'register' ? '사용할 비밀번호 설정' : '비밀번호'}
+                  </label>
+                  <div className="relative">
+                    <Lock className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="password"
+                      placeholder={playerAuthMode === 'register' ? '비밀번호 입력 (4자 이상)' : '비밀번호 입력'}
+                      value={playerPassword}
+                      onChange={(e) => setPlayerPassword(e.target.value)}
+                      required
+                      className="w-full pl-9 pr-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.1] text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/60"
+                    />
+                  </div>
+                </div>
+
+                {/* 신규 등록 모드일 때: 비밀번호 확인 */}
+                {playerAuthMode === 'register' && (
+                  <div>
+                    <label className="block text-xs font-semibold text-indigo-300 mb-1.5">
+                      비밀번호 확인
+                    </label>
+                    <div className="relative">
+                      <Lock className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="password"
+                        placeholder="비밀번호 다시 입력"
+                        value={playerPasswordConfirm}
+                        onChange={(e) => setPlayerPasswordConfirm(e.target.value)}
+                        required
+                        className="w-full pl-9 pr-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.1] text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/60"
+                      />
+                    </div>
+                    <p className="text-[11px] text-zinc-400 mt-2 leading-relaxed bg-white/[0.02] p-2.5 rounded-xl border border-white/[0.06]">
+                      🛡️ <b>도용 방지 안내:</b> 비밀번호를 등록하면 앞으로 다른 사람은 이 닉네임을 사용할 수 없습니다.
+                    </p>
+                  </div>
+                )}
+
                 {errorMsg && (
-                  <p className="text-xs text-rose-400 bg-rose-950/40 border border-rose-500/30 p-2.5 rounded-xl">
+                  <p className="text-xs text-rose-400 bg-rose-950/40 border border-rose-500/30 p-2.5 rounded-xl leading-relaxed">
                     {errorMsg}
                   </p>
                 )}
 
                 <button
                   type="submit"
-                  className="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-md transition"
+                  disabled={isVerifying}
+                  className="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-xs font-bold shadow-md transition active:scale-[0.98]"
                 >
-                  플레이어로 입장하기
+                  {isVerifying ? (
+                    '확인 중...'
+                  ) : playerAuthMode === 'register' ? (
+                    '🛡️ 내 닉네임 등록 및 로그인'
+                  ) : (
+                    '🎮 마인크래프트 닉네임으로 로그인'
+                  )}
                 </button>
               </form>
             )}

@@ -24,9 +24,9 @@ export default function DocComments({ documentSlug }: Props) {
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    // 1. 게스트 닉네임 복원
-    const savedGuest = localStorage.getItem('ravi_guest_name')
-    if (savedGuest) setAuthorName(savedGuest)
+    // 1. 로그인 닉네임 및 게스트 닉네임 복원
+    const savedName = localStorage.getItem('ravi_user_name') || localStorage.getItem('ravi_guest_name')
+    if (savedName) setAuthorName(savedName)
 
     // 2. Supabase 유저 확인
     if (isSupabaseConfigured && supabase) {
