@@ -86,7 +86,7 @@ export default function FreeDocDetailPage() {
     if (user.role === 'player') {
       setAuthorName(user.name)
     } else if (user.role === 'developer') {
-      setAuthorName('서버 개발자')
+      setAuthorName(user.name || '서버 개발자')
     }
 
     if (id) {

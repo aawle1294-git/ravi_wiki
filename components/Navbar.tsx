@@ -42,6 +42,7 @@ export default function Navbar() {
   const [showVersionModal, setShowVersionModal] = useState(false)
   const [pendingReportsCount, setPendingReportsCount] = useState(0)
   const [loginTab, setLoginTab] = useState<'developer' | 'player'>('player')
+  const [devNickname, setDevNickname] = useState('')
   const [devPassword, setDevPassword] = useState('')
   const [playerNickname, setPlayerNickname] = useState('')
   const [playerPassword, setPlayerPassword] = useState('')
@@ -52,6 +53,7 @@ export default function Navbar() {
     checked: boolean
     exists: boolean
     isReserved?: boolean
+    isDevName?: boolean
     message?: string
   } | null>(null)
   const [errorMsg, setErrorMsg] = useState('')
@@ -73,6 +75,7 @@ export default function Navbar() {
         checked: true,
         exists: res.exists,
         isReserved: res.isReserved,
+        isDevName: res.isDevName,
         message: res.message
       })
       if (res.exists) {
@@ -111,14 +114,15 @@ export default function Navbar() {
     e.preventDefault()
     setErrorMsg('')
     setIsVerifying(true)
-    const success = await loginAsDeveloper(devPassword)
+    const targetNick = devNickname.trim() || (user.name !== '방문자' ? user.name : '')
+    const success = await loginAsDeveloper(devPassword, targetNick)
     setIsVerifying(false)
     if (success) {
       setShowLoginModal(false)
       setDevPassword('')
-      alert('👑 개발자 권한으로 로그인되었습니다. 이제 공식 위키를 자유롭게 수정하고 새 문서를 추가할 수 있습니다.')
+      alert(`👑 개발자 권한으로 인증되었습니다! (${targetNick || '서버 개발자'})\n이제 공식 위키 수정, 윗설명 편집 등 개발자 권한을 모두 자유롭게 이용할 수 있습니다.`)
     } else {
-      setErrorMsg('개발자 암호가 올바르지 않습니다.')
+      setErrorMsg('개발자 인증 암호가 올바르지 않습니다.')
     }
   }
 
@@ -316,9 +320,25 @@ export default function Navbar() {
                   )}
                 </button>
 
-                <div className="flex items-center space-x-1.5 bg-indigo-500/15 border border-indigo-500/30 px-2.5 py-1.5 rounded-full text-xs font-semibold text-indigo-200 whitespace-nowrap shrink-0">
-                  <ShieldCheck className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
-                  <span className="whitespace-nowrap text-[11px]">개발자</span>
+                <div className="flex items-center space-x-1.5 bg-gradient-to-r from-amber-500/20 via-indigo-500/20 to-purple-500/20 border border-amber-400/40 px-2.5 py-1.5 rounded-full text-xs font-semibold text-amber-200 whitespace-nowrap shrink-0 shadow-sm">
+                  <span className="px-1.5 py-0.2 rounded bg-amber-500/30 text-amber-300 border border-amber-400/40 text-[10px] font-bold">
+                    👑 개발자
+                  </span>
+                  <img
+                    src={user.avatar || (user.name === '서버 개발자' ? '/logo.png' : `https://crafthead.net/helm/${encodeURIComponent(user.name)}/32`)}
+                    alt={user.name}
+                    className="w-4 h-4 rounded object-cover shrink-0"
+                    onError={(e) => {
+                      const target = e.currentTarget as HTMLImageElement
+                      if (!target.dataset.fallback) {
+                        target.dataset.fallback = '1'
+                        target.src = user.avatar === '/logo.png' ? '/logo.png' : `https://mc-heads.net/avatar/${encodeURIComponent(user.name)}/32`
+                      } else {
+                        target.style.display = 'none'
+                      }
+                    }}
+                  />
+                  <span className="whitespace-nowrap text-[11px] font-bold truncate max-w-[90px] text-white">{user.name}</span>
                   <button
                     onClick={logout}
                     className="ml-1 text-zinc-400 hover:text-rose-400 transition"
@@ -345,6 +365,18 @@ export default function Navbar() {
                   }}
                 />
                 <span className="whitespace-nowrap text-[11px] truncate max-w-[90px]">{user.name}</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLoginTab('developer')
+                    setDevNickname(user.name)
+                    setShowLoginModal(true)
+                  }}
+                  className="px-1.5 py-0.5 rounded bg-indigo-500/20 hover:bg-indigo-500/35 border border-indigo-500/30 text-[10px] text-indigo-300 font-semibold transition ml-0.5"
+                  title="현재 플레이어 계정으로 개발자 권한 인증"
+                >
+                  🛡️ 개발자 인증
+                </button>
                 <button
                   onClick={logout}
                   className="ml-1 text-zinc-400 hover:text-rose-400 transition"
@@ -444,31 +476,80 @@ export default function Navbar() {
               </button>
             </div>
 
-            {/* 1. 개발자 로그인 폼 */}
+            {/* 1. 개발자 로그인 및 인증 폼 */}
             {loginTab === 'developer' ? (
               <form onSubmit={handleDevLogin} className="space-y-4">
+                {/* 개발자 마인크래프트 닉네임 입력 (스킨 연동) */}
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-xs font-semibold text-indigo-300">
-                      개발자 암호
+                    <label className="text-xs font-semibold text-amber-300 flex items-center space-x-1">
+                      <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+                      <span>개발자 마크 닉네임</span>
                     </label>
                     <span className="text-[10px] text-zinc-500">
-                      공식 문서 작성/수정
+                      인게임 아이디 연동 (선택)
+                    </span>
+                  </div>
+
+                  <div className="flex items-center space-x-2.5">
+                    <div className="w-10 h-10 rounded-xl bg-black/40 border border-amber-500/30 flex items-center justify-center overflow-hidden shrink-0 shadow-inner">
+                      {devNickname.trim() ? (
+                        <img
+                          key={devNickname.trim()}
+                          src={`https://crafthead.net/helm/${encodeURIComponent(devNickname.trim())}/64`}
+                          alt=""
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            const target = e.currentTarget as HTMLImageElement
+                            if (!target.dataset.fallback) {
+                              target.dataset.fallback = '1'
+                              target.src = devNickname.trim() === '서버 개발자' ? '/logo.png' : `https://mc-heads.net/avatar/${encodeURIComponent(devNickname.trim())}/64`
+                            } else {
+                              target.style.display = 'none'
+                            }
+                          }}
+                        />
+                      ) : (
+                        <img src="/logo.png" alt="개발자" className="w-7 h-7 object-contain opacity-80" />
+                      )}
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="개발자 닉네임 (예: MaGaRoute, 개발자)"
+                      value={devNickname}
+                      onChange={(e) => setDevNickname(e.target.value)}
+                      className="flex-1 px-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.1] text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-amber-500/60"
+                    />
+                  </div>
+                  <p className="text-[11px] text-zinc-400 mt-1.5 leading-relaxed">
+                    💡 마크 닉네임을 입력하시면 본인 고유의 커스텀 스킨과 닉네임으로 개발자 권한이 부여됩니다. (미입력 시 기본 '서버 개발자')
+                  </p>
+                </div>
+
+                {/* 개발자 마스터 암호 */}
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-xs font-semibold text-indigo-300 flex items-center space-x-1">
+                      <Lock className="w-3.5 h-3.5 text-indigo-400" />
+                      <span>개발자 인증 암호</span>
+                    </label>
+                    <span className="text-[10px] text-zinc-500">
+                      공식 가이드 / 관리자 전용
                     </span>
                   </div>
                   <div className="relative">
-                    <Lock className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <KeyRound className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
                     <input
                       type="password"
-                      placeholder="암호를 입력하세요"
+                      placeholder="개발자 인증 암호를 입력하세요"
                       value={devPassword}
                       onChange={(e) => setDevPassword(e.target.value)}
                       required
                       className="w-full pl-9 pr-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.1] text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/60"
                     />
                   </div>
-                  <p className="text-[11px] text-zinc-400 mt-2 leading-relaxed">
-                    🔒 라비서버 관리자/개발진 전용 인증 암호를 입력하세요.
+                  <p className="text-[11px] text-zinc-400 mt-1.5 leading-relaxed">
+                    🔒 라비서버 관리자/개발진 전용 마스터 암호를 입력하세요.
                   </p>
                 </div>
 
@@ -481,9 +562,10 @@ export default function Navbar() {
                 <button
                   type="submit"
                   disabled={isVerifying}
-                  className="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-xs font-bold shadow-md transition"
+                  className="w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-600 via-indigo-600 to-violet-600 hover:from-amber-500 hover:to-indigo-500 disabled:opacity-50 text-white text-xs font-bold shadow-md transition flex items-center justify-center space-x-1.5 active:scale-95"
                 >
-                  {isVerifying ? '인증 확인 중...' : '개발자 인증하기'}
+                  <ShieldCheck className="w-4 h-4" />
+                  <span>{isVerifying ? '개발자 인증 확인 중...' : '👑 개발자 권한 인증 및 로그인'}</span>
                 </button>
               </form>
             ) : (
@@ -538,9 +620,12 @@ export default function Navbar() {
                         🔍 닉네임 등록 여부 확인 중...
                       </p>
                     ) : nickStatus?.isReserved ? (
-                      <p className="text-[11px] text-rose-400 font-medium">
-                        ⛔ 관리자 및 예약어 닉네임은 사용할 수 없습니다.
-                      </p>
+                      <div className="flex items-center justify-between text-[11px] bg-amber-500/10 border border-amber-500/25 px-2.5 py-1.5 rounded-lg">
+                        <span className="text-amber-300 font-semibold flex items-center space-x-1">
+                          <span>👑 개발자/관리자 닉네임 (개발자 암호로 로그인)</span>
+                        </span>
+                        <span className="text-[10px] text-amber-400 font-mono font-bold">인증 필요</span>
+                      </div>
                     ) : nickStatus?.exists ? (
                       <div className="flex items-center justify-between text-[11px]">
                         <span className="text-emerald-400 font-medium">

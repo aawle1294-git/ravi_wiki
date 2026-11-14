@@ -22,12 +22,13 @@ export interface NicknameStatus {
   avatar?: string
   registeredAt?: string
   isReserved?: boolean
+  isDevName?: boolean
   message?: string
 }
 
 interface AuthContextType {
   user: UserSession
-  loginAsDeveloper: (password: string) => Promise<boolean>
+  loginAsDeveloper: (password: string, nickname?: string) => Promise<boolean>
   loginAsPlayer: (nickname: string, password: string) => Promise<AuthResult>
   registerPlayer: (nickname: string, password: string) => Promise<AuthResult>
   checkNicknameStatus: (nickname: string) => Promise<NicknameStatus>
@@ -65,25 +66,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  // 🛠️ 개발자 로그인 (서버 API 검증)
-  const loginAsDeveloper = async (password: string): Promise<boolean> => {
+  // 🛠️ 개발자 로그인 및 인증 (서버 API 검증, 닉네임 및 스킨 연동)
+  const loginAsDeveloper = async (password: string, nickname?: string): Promise<boolean> => {
     try {
+      const targetNickname = nickname?.trim() || (user.name !== '방문자' ? user.name : '')
       const res = await fetch('/api/auth/verify-dev', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password }),
+        body: JSON.stringify({ password, nickname: targetNickname }),
       })
       const data = await res.json()
       if (data.success) {
+        const finalName = data.nickname || targetNickname || '서버 개발자'
+        const finalAvatar = data.avatar || (finalName === '서버 개발자' ? '/logo.png' : `https://crafthead.net/helm/${encodeURIComponent(finalName)}/32`)
         const devSession: UserSession = {
           role: 'developer',
-          name: '서버 개발자',
-          avatar: '/logo.png'
+          name: finalName,
+          avatar: finalAvatar
         }
         setUser(devSession)
         localStorage.setItem('ravi_user_role', 'developer')
-        localStorage.setItem('ravi_user_name', '서버 개발자')
-        localStorage.setItem('ravi_user_avatar', '/logo.png')
+        localStorage.setItem('ravi_user_name', finalName)
+        localStorage.setItem('ravi_user_avatar', finalAvatar)
         return true
       }
       return false
@@ -104,6 +108,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         avatar: data.avatar,
         registeredAt: data.registeredAt,
         isReserved: data.isReserved,
+        isDevName: data.isDevName,
         message: data.message
       }
     } catch {
@@ -134,13 +139,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const data = await res.json()
 
       if (data.success) {
+        const userRole: UserRole = data.role === 'developer' ? 'developer' : 'player'
         const playerSession: UserSession = {
-          role: 'player',
+          role: userRole,
           name: data.nickname || nickname.trim(),
           avatar: data.avatar || `https://crafthead.net/helm/${encodeURIComponent(nickname.trim())}/32`
         }
         setUser(playerSession)
-        localStorage.setItem('ravi_user_role', 'player')
+        localStorage.setItem('ravi_user_role', userRole)
         localStorage.setItem('ravi_user_name', playerSession.name)
         localStorage.setItem('ravi_user_avatar', playerSession.avatar || '')
         return { success: true, message: data.message }

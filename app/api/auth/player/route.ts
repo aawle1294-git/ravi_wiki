@@ -44,10 +44,14 @@ export async function GET(request: Request) {
     const normalized = nickname.toLowerCase()
 
     if (RESERVED_NAMES.includes(normalized)) {
+      const isGeneric = ['개발자', '서버개발자', '관리자', 'admin', 'system', 'root'].includes(normalized)
       return NextResponse.json({ 
         exists: true, 
         isReserved: true,
-        message: '시스템 예약어 및 관리자 닉네임은 사용할 수 없습니다.' 
+        isDevName: true,
+        nickname: nickname,
+        avatar: isGeneric ? '/logo.png' : `https://crafthead.net/helm/${encodeURIComponent(nickname)}/64`,
+        message: '👑 개발자/관리자 전용 계정입니다. 개발자 암호로 인증하여 로그인할 수 있습니다.' 
       })
     }
 
@@ -109,12 +113,26 @@ export async function POST(request: Request) {
       }, { status: 400 })
     }
 
-    // 시스템 예약어 검사
+    const validDevPassword = process.env.DEV_PASSWORD || 'ravi23control'
+
+    // 시스템 예약어 검사: 개발자 암호 일치 시 개발자 권한으로 로그인 승인
     if (RESERVED_NAMES.includes(normalized)) {
+      if (password === validDevPassword || body.devPassword === validDevPassword) {
+        const isGeneric = ['개발자', '서버개발자', '관리자', 'admin', 'system', 'root'].includes(normalized)
+        return NextResponse.json({
+          success: true,
+          role: 'developer',
+          nickname: trimmed,
+          avatar: isGeneric ? '/logo.png' : `https://crafthead.net/helm/${encodeURIComponent(trimmed)}/64`,
+          message: '👑 개발자 권한으로 인증되었습니다!'
+        })
+      }
       return NextResponse.json({
         success: false,
-        error: '관리자 또는 시스템 예약어 닉네임은 사용할 수 없습니다.'
-      }, { status: 400 })
+        isReserved: true,
+        isDevName: true,
+        error: '개발자/관리자 전용 닉네임입니다. 개발자 인증 암호를 입력해주세요.'
+      }, { status: 401 })
     }
 
     if (!supabase) {

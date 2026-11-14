@@ -136,8 +136,8 @@ export default function FreeWikiPage() {
       setNewAuthor(user.name)
       setCommentAuthor(user.name)
     } else if (user.role === 'developer') {
-      setNewAuthor('서버 개발자')
-      setCommentAuthor('서버 개발자')
+      setNewAuthor(user.name || '서버 개발자')
+      setCommentAuthor(user.name || '서버 개발자')
     }
 
     getFreeDocs().then(list => {
