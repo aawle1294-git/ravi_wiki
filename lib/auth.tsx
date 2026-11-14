@@ -60,7 +60,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser({
         role: 'player',
         name: savedName,
-        avatar: savedAvatar || `https://mc-heads.net/avatar/${encodeURIComponent(savedName)}/32`
+        avatar: savedAvatar || `https://crafthead.net/helm/${encodeURIComponent(savedName)}/32`
       })
     }
   }, [])
@@ -137,7 +137,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const playerSession: UserSession = {
           role: 'player',
           name: data.nickname || nickname.trim(),
-          avatar: data.avatar || `https://mc-heads.net/avatar/${encodeURIComponent(nickname.trim())}/32`
+          avatar: data.avatar || `https://crafthead.net/helm/${encodeURIComponent(nickname.trim())}/32`
         }
         setUser(playerSession)
         localStorage.setItem('ravi_user_role', 'player')
@@ -182,7 +182,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const playerSession: UserSession = {
           role: 'player',
           name: data.nickname || nickname.trim(),
-          avatar: data.avatar || `https://mc-heads.net/avatar/${encodeURIComponent(nickname.trim())}/32`
+          avatar: data.avatar || `https://crafthead.net/helm/${encodeURIComponent(nickname.trim())}/32`
         }
         setUser(playerSession)
         localStorage.setItem('ravi_user_role', 'player')

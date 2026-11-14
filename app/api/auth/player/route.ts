@@ -67,14 +67,14 @@ export async function GET(request: Request) {
       return NextResponse.json({
         exists: true,
         nickname: row.author,
-        avatar: `https://mc-heads.net/avatar/${encodeURIComponent(row.author)}/64`,
+        avatar: `https://crafthead.net/helm/${encodeURIComponent(row.author)}/64`,
         registeredAt: row.created_at
       })
     }
 
     return NextResponse.json({
       exists: false,
-      avatar: `https://mc-heads.net/avatar/${encodeURIComponent(nickname)}/64`
+      avatar: `https://crafthead.net/helm/${encodeURIComponent(nickname)}/64`
     })
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 })
@@ -173,7 +173,7 @@ export async function POST(request: Request) {
       return NextResponse.json({
         success: true,
         nickname: trimmed,
-        avatar: `https://mc-heads.net/avatar/${encodeURIComponent(trimmed)}/64`,
+        avatar: `https://crafthead.net/helm/${encodeURIComponent(trimmed)}/64`,
         message: '마인크래프트 닉네임이 성공적으로 등록되었습니다!'
       })
     }
@@ -207,10 +207,11 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       nickname: account.author || trimmed,
-      avatar: `https://mc-heads.net/avatar/${encodeURIComponent(account.author || trimmed)}/64`,
+      avatar: `https://crafthead.net/helm/${encodeURIComponent(account.author || trimmed)}/64`,
       message: '로그인되었습니다.'
     })
   } catch (e: any) {
     return NextResponse.json({ success: false, error: e.message || '서버 오류' }, { status: 500 })
   }
 }
+

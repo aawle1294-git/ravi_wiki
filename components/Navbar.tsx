@@ -331,11 +331,17 @@ export default function Navbar() {
             ) : user.role === 'player' ? (
               <div className="flex items-center space-x-1.5 bg-white/[0.04] border border-white/[0.08] px-2.5 py-1.5 rounded-full text-xs font-semibold text-zinc-200 whitespace-nowrap shrink-0">
                 <img
-                  src={user.avatar || `https://mc-heads.net/avatar/${encodeURIComponent(user.name)}/24`}
+                  src={user.avatar || `https://crafthead.net/helm/${encodeURIComponent(user.name)}/32`}
                   alt={user.name}
                   className="w-4 h-4 rounded object-cover shrink-0"
                   onError={(e) => {
-                    (e.currentTarget as HTMLElement).style.display = 'none'
+                    const target = e.currentTarget as HTMLImageElement
+                    if (!target.dataset.fallback) {
+                      target.dataset.fallback = '1'
+                      target.src = `https://mc-heads.net/avatar/${encodeURIComponent(user.name)}/32`
+                    } else {
+                      target.style.display = 'none'
+                    }
                   }}
                 />
                 <span className="whitespace-nowrap text-[11px] truncate max-w-[90px]">{user.name}</span>
@@ -497,11 +503,18 @@ export default function Navbar() {
                     <div className="w-10 h-10 rounded-xl bg-black/40 border border-white/[0.1] flex items-center justify-center overflow-hidden shrink-0 shadow-inner">
                       {playerNickname.trim() ? (
                         <img
-                          src={`https://mc-heads.net/avatar/${encodeURIComponent(playerNickname.trim())}/40`}
+                          key={playerNickname.trim()}
+                          src={`https://crafthead.net/helm/${encodeURIComponent(playerNickname.trim())}/64`}
                           alt=""
                           className="w-full h-full object-cover"
                           onError={(e) => {
-                            (e.currentTarget as HTMLElement).style.display = 'none'
+                            const target = e.currentTarget as HTMLImageElement
+                            if (!target.dataset.fallback) {
+                              target.dataset.fallback = '1'
+                              target.src = `https://mc-heads.net/avatar/${encodeURIComponent(playerNickname.trim())}/64`
+                            } else {
+                              target.style.display = 'none'
+                            }
                           }}
                         />
                       ) : (
